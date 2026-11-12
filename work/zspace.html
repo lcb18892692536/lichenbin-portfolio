@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Z·SPACE · 电商直播经营 Agent | 李陈斌</title>
+<meta name="description" content="让 Agent 懂生意，而不是只会查表：业务语义层、指标口径治理、独立复核与闭环。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="../index.html">LC</a>
+  <div class="menu">
+    <a href="../index.html">Home | 主页</a>
+    <a href="../work.html" class="on">Portfolio | 作品集</a>
+    <a href="../about.html">About Us | 关于我</a>
+  </div>
+  <div class="right"><a href="../assets/resume.pdf" download>简历 PDF</a></div>
+</nav>
+
+<header class="p-hero one">
+  <div class="crumbs"><a href="../index.html">Home</a><span>/</span><a href="../work.html">Portfolio</a><span>/</span>Z·SPACE</div>
+  <div class="eyebrow">Case 01 | 电商直播经营 Agent · 2025.11 — 2026.06</div>
+  <h1>让 Agent 懂生意，而不是只会查表。</h1>
+  <p class="claim">运营问“这场为什么比上一场差”，Agent 要答得出来，还要答得出处。</p>
+
+  <dl class="p-meta">
+    <div><dt>我的角色</dt><dd>产品经理 · 数据接入与业务语义层</dd></div>
+    <div><dt>团队</dt><dd>2 后端 / 2 数据算法 / 1 前端</dd></div>
+    <div><dt>覆盖</dt><dd>80+ 运营 · 2500+ 场复盘</dd></div>
+    <div><dt>状态</dt><dd>已在客户侧使用</dd></div>
+  </dl>
+</header>
+
+<main>
+  <section class="flowwrap" id="flowwrap">
+    <div class="flow-stage" id="flowStage">
+      <iframe id="flowFrame" src="../demo/zspace-flow.html?embed=1" title="Z·SPACE：一次提问的十步判断链演示" scrolling="no"></iframe>
+    </div>
+    <div class="flow-bar">
+      <button class="fb-play" id="fbPlay" type="button"><i></i><span>播放</span></button>
+      <div class="fb-dots" id="fbDots"></div>
+      <button class="fb-full" id="fbFull" type="button">⤢ 放大</button>
+    </div>
+  </section>
+  <p class="flow-cap"><b>图 1</b> · 一次提问的十步判断链：点「播放」看完整流程（约 40 秒），或点任意步点直接跳到那一步，看它吃进去什么、做了什么、吐出什么。数据已脱敏。</p>
+
+  <!-- 01 -->
+  <section class="chapter">
+    <div class="num">01<span>Context</span></div>
+    <div class="content rv">
+      <h2>直播这门生意，天生不适合被复盘</h2>
+      <p>一场直播里，主播的每句话、运营的每个动作（改价、上链接、发福袋、切款）都在几秒钟内发生，也在几秒钟内过去。事后留下的只有数据，没有过程。更麻烦的是它不可复现——同一套货盘、同一个主播，换一天再播，结果可能完全不同，因为流量结构变了。</p>
+      <p>所以“A 场比 B 场好”这个结论本身就不一定成立，除非你把变量控住。而一场直播卖得好不好，至少由六件事共同决定：<b>流量、货盘、话术、时段、平台活动、竞品动作</b>。任何一个变了，结果都会变。</p>
+      <div class="pull">直播复盘天然是一件“证据不足”的事——<br>你手上只有一个结果，和一堆可能的原因。</div>
+      <h3>客户现在怎么复盘</h3>
+      <p>下播之后，运营去平台后台导数据，拼到 Excel，看几个核心指标，和上一场比一比，得出一个说法，写进周报。这套流程有四个问题：</p>
+      <ul>
+        <li><b>数据是拼出来的。</b>平台后台、ERP、投放后台、客服系统、自建埋点，五套数据五个口径，经常对不上；运营知道对不上，但没时间去查，最后默认“差不多就行”。</li>
+        <li><b>归因靠经验。</b>“这场流量不行”“主播状态不好”——两句话都对，但都没法验证，也没法变成下一场的动作。</li>
+        <li><b>结论留不下来。</b>复盘写在周报里，下一场从零开始；半年后没人记得“上次改话术到底有没有用”。</li>
+        <li><b>人一走就断档。</b>判断力长在操盘手脑子里，人走了，店铺的经验就没了。</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="chapter">
+    <div class="num">02<span>Split</span></div>
+    <div class="content rv">
+      <h2>十步里，只有三步交给模型</h2>
+      <p>客户真正想要的不是报表，是“下一步怎么办”。所以这条 Agent 只干三件事：<b>查数、复盘、给下一场的建议</b>——每一件都必须能回答“凭什么”。</p>
+      <p>产品形态是一句话：<b>用对话提问，用画布看证据</b>。左边提问，右边跑链路，每一步的输入和输出都摊开。上面那张图就是一次完整运行。</p>
+      <div class="pull">链路长不等于复杂。<br>长，是因为每一步都留了痕迹。</div>
+
+      <h3>十个节点，五种颜色</h3>
+      <ol class="steps10">
+        <li><b>01</b><span>提问入口</span><em>定场次、定权限</em><i class="t-fix">固定</i></li>
+        <li><b>02</b><span>意图分型</span><em>查数 / 归因 / 复盘 / 对比</em><i class="t-agent">Agent</i></li>
+        <li><b>03</b><span>信息校验</span><em>缺信息就回问，不猜</em><i class="t-fix">固定</i></li>
+        <li><b>04</b><span>口径对齐</span><em>摊开让人点确认</em><i class="t-human">人工</i></li>
+        <li><b>05</b><span>语义检索</span><em>口径字典 + 历史复盘</em><i class="t-rag">检索</i></li>
+        <li><b>06</b><span>取数执行</span><em>只读沙箱，白名单之外看不见</em><i class="t-fix">固定</i></li>
+        <li><b>07</b><span>完整性校验</span><em>数据不净就熔断</em><i class="t-fix">固定</i></li>
+        <li><b>08</b><span>分析编排</span><em>复现、排除、拆解、归因</em><i class="t-agent">Agent</i></li>
+        <li><b>09</b><span>独立复核</span><em>专挑口径与因果</em><i class="t-agent">Agent</i></li>
+        <li><b>10</b><span>结论画布</span><em>结论 / 依据 / 待确认 / 动作</em><i class="t-out">交付</i></li>
+      </ol>
+      <p class="cap" style="margin-bottom:26px">颜色和上面演示里的节点一致：蓝 = 固定流程，紫 = Agent，橙 = 检索，绿 = 人工确认，青 = 交付。</p>
+
+      <h3>为什么这么切</h3>
+      <ul>
+        <li><b>能写死的，不进模型。</b>入口、校验、取数、复核、画布这五步，逻辑是确定的。写进代码，结果就是可复现的；交给模型，同样的输入今天和明天可能不是一个答案——对复盘工具来说，这比慢更致命。</li>
+        <li><b>模型只做“信息不全时的判断”。</b>意图分型、归因编排、独立复核，这三步的共同点是：规则写不出来，但人做得出来。模型的活是给出一个可被检查的假设，不是执行一个确定的动作。</li>
+        <li><b>人只出现在会改变结论的地方。</b>十步里只有“口径对齐”必须由人点。因为口径错了，后面八步算得再准都是在算错的东西——这是整条链路唯一没人能替代的那一下。</li>
+      </ul>
+      <p>这个比例不是设计出来的，是逼出来的。第一版我们把取数和校验也交给模型“灵活处理”，结果出现了查错表、时间窗错位、拿 3 场样本下结论这类问题。<b>后来一条条挪回固定流程，模型的地盘缩到三步，准确率才稳住。</b></p>
+      <p>所以“AI 产品”这件事在我这儿有个很具体的判断标准：<b>不是模型用得多，而是你能不能指着链路上某一步说，这里为什么必须是模型。</b></p>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="chapter">
+    <div class="num">03<span>Decisions</span></div>
+    <div class="content rv">
+      <h2>三个我当时做下的取舍</h2>
+      <p>这一节是我最想讲的——不是做了什么，而是<b>否掉了什么</b>。</p>
+      <div class="opts">
+        <div>
+          <b><i>01</i>不做“更快的报表”</b>
+          <p>报表解决“看见”，客户要的是“下一步”。所以第一版就没做自定义看板，把力气全放在“结论能不能被追问”上。</p>
+        </div>
+        <div>
+          <b><i>02</i>口径先于模型</b>
+          <p>同一个“转化率”，运营、投放、财务是三个算法。不先把定义写进字典，模型算得再快也是在算错的东西。</p>
+        </div>
+        <div>
+          <b><i>03</i>结论必须分级</b>
+          <p>事实、推断、建议分开标注，超出数据支持范围的结论直接不输出。宁可少说，不能说错。</p>
+        </div>
+      </div>
+      <h3>为什么口径这件事只能产品经理来做</h3>
+      <p>工程师能建表，算法能查数，但“这个词在客户嘴里是什么意思”只有做过业务的人知道。我做的事可以一句话概括：<b>把客户手里的表、字段、指标口径，翻译成 Agent 能理解、并且和运营说的是同一件事的“生意语言”。</b></p>
+      <p>指标字典不是一张字段清单，每条都必须是三要素：<b>定义 + 时间窗 + 数据出处</b>。缺一条，两个人在会上就能吵起来。</p>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section class="chapter">
+    <div class="num">04<span>Evidence</span></div>
+    <div class="content rv">
+      <h2>证据：口径字典、实体链、复核清单</h2>
+      <h3>指标字典（节选）</h3>
+      <table class="t">
+        <thead><tr><th>指标</th><th>定义</th><th>时间窗</th><th>出处</th></tr></thead>
+        <tbody>
+          <tr><td>GMV</td><td>下单金额，含未支付与退款</td><td>场次开始至下播 +30 分钟</td><td>订单表 · 按场次 ID</td></tr>
+          <tr><td>成交额</td><td>支付成功且未退款</td><td>同上，T+1 重新结算</td><td>支付流水 · 结算口径</td></tr>
+          <tr><td>进入率</td><td>进入直播间人数 / 曝光人数</td><td>按小时切分</td><td>平台后台 · 曝光口径</td></tr>
+          <tr><td>单位时间转化效率</td><td>成交单量 / 有效讲解时长</td><td>按商品切分</td><td>自建埋点 · 讲品事件</td></tr>
+        </tbody>
+      </table>
+      <p class="cap" style="margin-top:-8px">注：真实字典共 40+ 条，这里只放四条；数值与字段名已脱敏。</p>
+
+      <h3>实体链：店铺 → 直播间 → 场次 → 商品 → 订单</h3>
+      <p>所有查询都必须能落到这条链上，否则就是“猜”。运营问“这场为什么差”，Agent 要能一路拆到具体商品和具体时段，而不是给一个整体结论。</p>
+
+      <h3>Bad Case 分四层，不混在一起</h3>
+      <table class="t">
+        <thead><tr><th>层</th><th>典型表现</th><th>怎么修</th></tr></thead>
+        <tbody>
+          <tr><td>语义层</td><td>口径理解错、实体指代错</td><td>补字典、加同义词与追问</td></tr>
+          <tr><td>取数层</td><td>查错表、时间窗错、权限缺</td><td>数据校验、口径规则、只读通道</td></tr>
+          <tr><td>分析层</td><td>样本不可比、因果倒置</td><td>变量控制清单、复核环节</td></tr>
+          <tr><td>表达层</td><td>结论超出数据、没出处</td><td>输出约束、分级模板</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section class="chapter">
+    <div class="num">05<span>Results</span></div>
+    <div class="content rv">
+      <h2>结果：先把“数对不对”解决，再谈快不快</h2>
+      <div class="kpi">
+        <div><b>80+</b><span>覆盖运营人数</span></div>
+        <div><b>2500+</b><span>累计复盘场次</span></div>
+        <div><b>−72%</b><span>单次复盘人工投入<br>中位数 90 → 25 分钟</span></div>
+        <div><b>98%</b><span>数字准确率<br>严重错误 0 起</span></div>
+      </div>
+      <p>这四组数字里，我认为最有意义的不是“快 72%”，而是<b>严重错误 0 起</b>。复盘工具最怕的不是慢，是给了一个理直气壮的错答案——那会让运营在下一场做出更贵的错误决定。</p>
+      <p>数字准确率的统计口径：随机抽取复盘结论中的数字，与源表逐条核对；错误分“轻微（四舍五入、单位）”和“严重（口径错、张冠李戴）”。</p>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section class="chapter">
+    <div class="num">06<span>Reflection</span></div>
+    <div class="content rv">
+      <h2>复盘</h2>
+      <p><b>最大的教训是：语义层做得太晚。</b>项目前期我们在分析流程上花了很多时间，但真正卡住客户的是“你说的转化率和我说的不是一个东西”。如果重来，我会在第 2 周就把指标字典的骨架拉出来，哪怕只有 10 条。</p>
+      <p><b>第二个教训是复核环节容易被当成负担。</b>一开始运营觉得“又要我确认一遍口径”很烦，直到有一次复核拦下了一个样本量只有 3 场的结论——从那以后，他们自己会主动看样本量。</p>
+      <div class="qa">
+        <details open><summary>“你怎么保证 Agent 的结论是对的？”</summary>
+          <p>不能保证它对，只能保证它“可被检查”。做法是三层：口径先对齐（口径没确认就不往下走）、结论分级（事实/推断/建议分开）、每条结论带出处（哪个表、哪个时间窗、哪次查询）。剩下的靠独立复核和回归样例。</p>
+        </details>
+        <details><summary>“98% 准确率是怎么算的？会不会自说自话？”</summary>
+          <p>抽样核对：从复盘结论里抽数字，回源表逐条比。错误分轻微和严重两级。这个口径本身也写在文档里，客户可以按同样方法抽查。</p>
+        </details>
+        <details><summary>“为什么不让 Agent 直接给动作建议？”</summary>
+          <p>给过，后来收窄了。建议一旦具体到“把 A 款提到第 3 位”，运营会照做，但模型并不知道明天的流量结构。现在只给到“哪个变量最可疑、下一场怎么验证”，动作由人定。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="nextproj">
+  <a href="huawei.html"><div><small>Next Case</small><br><b>直播违规话术实时检测 · 华为</b></div><span>→</span></a>
+</div>
+
+<footer class="foot">
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br><a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a></div>
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="../assets/resume.pdf" download>简历 PDF</a><br><a href="../work.html">全部作品</a></div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">© <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州</div>
+</footer>
+
+<script src="../assets/app.js"></script>
+<script src="../assets/flow.js"></script>
+</body>
+</html>

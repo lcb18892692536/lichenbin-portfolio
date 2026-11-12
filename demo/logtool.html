@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>火山语音识别日志 · 断句时长记录表</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#161b22; --panel-2:#1b222b; --line:#252d38;
+    --fg:#e6edf3; --fg-dim:#8b98a8; --fg-mute:#5d6b7c;
+    --accent:#4c8dff; --accent-soft:rgba(76,141,255,.14);
+    --warn:#ffb020; --bad:#ff5c5c; --ok:#3fb950;
+    --mono:'Cascadia Mono','JetBrains Mono',Consolas,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--fg);
+    font:14px/1.6 -apple-system,'Segoe UI','Microsoft YaHei',sans-serif;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  a{color:var(--accent)}
+
+  /* ---------- 顶栏 ---------- */
+  header{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:12px 20px; background:linear-gradient(180deg,#171d25,#12171d);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30;
+  }
+  header h1{font-size:15px; margin:0; font-weight:600; letter-spacing:.3px}
+  header h1 span{color:var(--fg-mute); font-weight:400; margin-left:8px; font-size:12px}
+  .spacer{flex:1}
+  .btn{
+    background:var(--panel-2); color:var(--fg); border:1px solid var(--line);
+    padding:6px 13px; border-radius:7px; font-size:13px; cursor:pointer;
+    transition:.14s; white-space:nowrap; font-family:inherit;
+  }
+  .btn:hover{border-color:#3a4756; background:#212a35}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600}
+  .btn.primary:hover{background:#3f7ce8}
+  .btn.danger:hover{border-color:var(--bad); color:var(--bad)}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.45; cursor:not-allowed}
+
+  /* ---------- 布局 ---------- */
+  main{flex:1; padding:16px 20px 40px; display:flex; flex-direction:column; gap:16px; max-width:100%}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  .card > .card-hd{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:10px 14px; border-bottom:1px solid var(--line); background:var(--panel-2);
+  }
+  .card-hd h2{margin:0; font-size:13px; font-weight:600; color:var(--fg)}
+  .card-hd .hint{font-size:12px; color:var(--fg-mute)}
+  .card-bd{padding:14px}
+
+  /* ---------- 规则区 ---------- */
+  #rules .card-bd{display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:14px}
+  .rule{background:#12171d; border:1px solid var(--line); border-radius:8px; padding:11px 13px}
+  .rule b{display:block; font-size:12.5px; color:var(--accent); margin-bottom:6px; font-weight:600}
+  .rule code,.mono{font-family:var(--mono); font-size:12px}
+  .rule code{display:block; background:#0b0f14; border:1px solid #1e2731; color:#9fd3ff;
+    padding:6px 8px; border-radius:5px; overflow-x:auto; white-space:pre}
+  .rule p{margin:6px 0 0; font-size:12px; color:var(--fg-dim)}
+  .rule p em{color:var(--warn); font-style:normal}
+  .rule.bad{border-color:rgba(255,92,92,.32)}
+  .rule.bad b{color:#ff8080}
+
+  /* ---------- 输入区 ---------- */
+  .io{display:grid; grid-template-columns:1.25fr 1fr; gap:16px; align-items:start}
+  @media (max-width:1080px){ .io{grid-template-columns:1fr} }
+  textarea{
+    width:100%; min-height:190px; resize:vertical; background:#0b0f14; color:var(--fg);
+    border:1px solid var(--line); border-radius:8px; padding:11px 12px;
+    font-family:var(--mono); font-size:12px; line-height:1.55; outline:none;
+  }
+  textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  textarea::placeholder{color:var(--fg-mute)}
+  .io-foot{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap}
+  .io-foot .hint{font-size:12px; color:var(--fg-mute)}
+  #drop{
+    border:1px dashed var(--line); border-radius:8px; padding:10px 12px; margin-bottom:10px;
+    font-size:12.5px; color:var(--fg-dim); display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#12171d; transition:.15s;
+  }
+  #drop.over{border-color:var(--accent); background:var(--accent-soft); color:var(--fg)}
+  #drop b{color:var(--accent); font-weight:600}
+
+  /* ---------- 预览 ---------- */
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:7px 14px; font-size:12.5px}
+  .kv dt{color:var(--fg-mute); white-space:nowrap}
+  .kv dd{margin:0; font-family:var(--mono); font-size:12px; word-break:break-all}
+  .big{font-size:22px; font-weight:700; font-family:var(--mono); color:var(--accent)}
+  .pill{display:inline-block; padding:1px 8px; border-radius:20px; font-size:11.5px; font-weight:600}
+  .pill.yes{background:rgba(255,92,92,.16); color:#ff8080; border:1px solid rgba(255,92,92,.35)}
+  .pill.no{background:rgba(63,185,80,.14); color:#56d364; border:1px solid rgba(63,185,80,.3)}
+  .pill.err{background:rgba(255,92,92,.2); color:#ff9a9a; border:1px solid rgba(255,92,92,.5)}
+  .seg-list{margin-top:12px; border-top:1px dashed var(--line); padding-top:10px}
+  .seg-list table{width:100%; border-collapse:collapse; font-size:12px}
+  .seg-list th,.seg-list td{padding:4px 7px; text-align:left; border-bottom:1px solid #1c242e}
+  .seg-list th{color:var(--fg-mute); font-weight:500; font-size:11.5px}
+  .seg-list td.mono{font-family:var(--mono)}
+  .tagT{color:#56d364; font-weight:700}
+  .tagF{color:var(--fg-mute)}
+  .alertbox{background:rgba(255,92,92,.1); border:1px solid rgba(255,92,92,.4); color:#ff9a9a;
+    border-radius:8px; padding:9px 12px; font-size:12.5px; margin-bottom:12px; line-height:1.7}
+  .alertbox b{color:#ffb3b3}
+
+  /* ---------- 批量进度 ---------- */
+  .prog{margin-top:12px; border-top:1px dashed var(--line); padding-top:10px; font-size:12.5px}
+  .bar{height:6px; background:#0b0f14; border-radius:4px; overflow:hidden; margin:7px 0}
+  .bar > i{display:block; height:100%; width:0; background:linear-gradient(90deg,#4c8dff,#56d364); transition:width .1s}
+  .prog .row{display:flex; gap:16px; flex-wrap:wrap; color:var(--fg-dim); font-family:var(--mono); font-size:12px}
+  .prog .row b{color:var(--fg)}
+
+  /* ---------- 结果表 ---------- */
+  .table-wrap{overflow:auto; max-height:62vh}
+  table.grid{width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px}
+  table.grid th{
+    position:sticky; top:0; z-index:2; background:#1d242e; color:#b9c6d6;
+    font-weight:600; text-align:left; padding:9px 10px; white-space:nowrap;
+    border-bottom:1px solid var(--line); font-size:12px;
+  }
+  table.grid td{padding:8px 10px; border-bottom:1px solid #1a212a; vertical-align:top}
+  table.grid tr:hover td{background:#151b23}
+  table.grid tr.sel td{background:rgba(76,141,255,.09)}
+  table.grid tr.badrow td{background:rgba(255,92,92,.07)}
+  table.grid tr.badrow:hover td{background:rgba(255,92,92,.12)}
+  td.idx{color:var(--fg-mute); font-family:var(--mono); text-align:right; width:48px}
+  td.mono{font-family:var(--mono); font-size:11.5px; word-break:break-all; max-width:250px}
+  td.text{min-width:280px; max-width:520px; line-height:1.5}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  td.num b{font-size:13px}
+  td.err{color:#ff9a9a; font-size:11.5px; min-width:170px; line-height:1.5}
+  td.actions{width:96px; white-space:nowrap}
+  .iconbtn{background:none; border:1px solid transparent; color:var(--fg-mute); cursor:pointer;
+    border-radius:5px; padding:2px 6px; font-size:12px; font-family:inherit}
+  .iconbtn:hover{color:var(--accent); border-color:#2b3542; background:#1b232d}
+  .iconbtn.del:hover{color:var(--bad); border-color:rgba(255,92,92,.4)}
+  .empty{padding:38px 16px; text-align:center; color:var(--fg-mute); font-size:13px}
+  .more{padding:12px; text-align:center; color:var(--fg-mute); font-size:12.5px; border-top:1px solid var(--line)}
+
+  /* ---------- 工具条 ---------- */
+  .toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 14px;
+    border-bottom:1px solid var(--line); background:#12171d}
+  .toolbar input[type=search]{
+    background:#0b0f14; border:1px solid var(--line); color:var(--fg); border-radius:7px;
+    padding:6px 10px; font-size:12.5px; font-family:var(--mono); outline:none; min-width:260px;
+  }
+  .toolbar input[type=search]:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .toolbar .stat{font-size:12px; color:var(--fg-mute); font-family:var(--mono)}
+  .toolbar .stat b{color:var(--fg)}
+  .toolbar .stat .warn{color:#ff9a9a}
+
+  /* ---------- toast ---------- */
+  #toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#1f2a36; border:1px solid #2f3d4d; color:var(--fg); padding:9px 18px;
+    border-radius:8px; font-size:13px; opacity:0; pointer-events:none; transition:.22s; z-index:99;
+    box-shadow:0 8px 24px rgba(0,0,0,.45); max-width:80vw}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  #toast.err{border-color:rgba(255,92,92,.5); color:#ff9a9a}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>火山语音识别日志 · 断句时长记录表<span>取数规则固定版 v2</span></h1>
+  <div class="spacer"></div>
+  <span class="stat" id="stat"></span>
+  <button class="btn ghost" id="btn-rules">规则说明</button>
+  <button class="btn ghost" id="btn-copy">复制全表</button>
+  <button class="btn ghost" id="btn-json">导出 JSON</button>
+  <button class="btn danger" id="btn-clear">清空</button>
+</header>
+
+<main>
+
+  <!-- 规则说明 -->
+  <section class="card" id="rules">
+    <div class="card-hd">
+      <h2>固定的取数规则</h2>
+      <span class="hint">同一条日志每次都用这套规则解析，结果可复现</span>
+    </div>
+    <div class="card-bd">
+      <div class="rule">
+        <b>① uuid</b>
+        <code>obsClientUuid:([0-9a-fA-F]{8}-...-[0-9a-fA-F]{12})</code>
+        <p>取 <em>obsClientUuid:</em> 后紧跟的 UUID（36 位标准格式）。</p>
+      </div>
+      <div class="rule">
+        <b>② log_id</b>
+        <code>result.additions.log_id</code>
+        <p>JSON 路径取数，示例：<em>202611031025309F2B61C4A8D07E5B3C91</em>
+           该串前 14 位是日志自身时间，<strong>不用于落表</strong>，仅在明细里作参考。</p>
+      </div>
+      <div class="rule">
+        <b>③ text</b>
+        <code>result.text</code>
+        <p>整条识别全文（含 definite:false 的尾段），原样落表。</p>
+      </div>
+      <div class="rule">
+        <b>④ 断句时长（ms）</b>
+        <code>Σ (end_time − start_time)
+  其中 utterance.definite === true</code>
+        <p>只累加 <em>definite:true</em> 的片段，单位毫秒，不做秒转换。
+           <strong>取的是 end_time−start_time，不是时间轴首尾跨度。</strong></p>
+      </div>
+      <div class="rule">
+        <b>⑤ 断句时长是否大于十秒</b>
+        <code>duration_ms &gt; 10000</code>
+        <p>严格大于 10000ms 记「是」，否则记「否」。</p>
+      </div>
+      <div class="rule">
+        <b>⑥ 记录时间</b>
+        <code>解析时的当前时间
+格式 yyyy-MM-dd HH:mm:ss</code>
+        <p>取<em>你处理这条日志的时刻</em>（本地时区），不是 log_id 里的时间。</p>
+      </div>
+      <div class="rule bad">
+        <b>⑦ 异常校验（v2 新增）</b>
+        <code>count(definite === true) !== 1  →  标记异常</code>
+        <p>同一条 text 正常只应有 <em>1 个</em> definite:true 片段。
+           出现 0 个或多个时该行被标红并在「断句时长」列直接写出原因，不入正常统计。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 输入 + 预览 -->
+  <section class="io">
+    <div class="card">
+      <div class="card-hd">
+        <h2>导入日志</h2>
+        <span class="hint">粘贴或选择文件（JSON / 日志文本）；支持带 <code class="mono">{"content":"..."}</code> 外壳与 <code class="mono">\"</code> 转义</span>
+      </div>
+      <div class="card-bd">
+        <div id="drop">
+          
+          <input type="file" id="file" accept=".json,.txt,.log,.jsonl,application/json,text/plain" multiple>
+          <span class="hint">可多选；也可把文件直接拖到下方的框里</span>
+        </div>
+        <textarea id="input" spellcheck="false" placeholder='在此粘贴日志，例如：
+obsClientUuid:fe5f9c25-... 火山语音识别返回结果转对象:{"audio_info":...}
+
+也可以把 .json / .txt 日志文件拖到这里'></textarea>
+        <div class="io-foot">
+          <button class="btn primary" id="btn-parse">解析并新增行 ⏎</button>
+          <button class="btn" id="btn-preview">仅预览</button>
+          <button class="btn ghost" id="btn-sample">载入示例</button>
+          <span class="hint" id="input-hint">Ctrl/⌘ + Enter 直接提交</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h2>解析预览</h2><span class="hint" id="preview-tag">等待输入</span></div>
+      <div class="card-bd" id="preview">
+        <div class="empty">粘贴或选择日志后自动预览取数结果</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 记录表 -->
+  <section class="card">
+    <div class="card-hd">
+      <h2>记录表</h2>
+      <span class="hint">与「日志记录.xlsx」表头一致 · 删除只影响这里，不动 Excel</span>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="筛选：uuid / log_id / text 关键词…">
+      <button class="btn ghost" id="btn-err-only">只看异常</button>
+      <div class="spacer"></div>
+      <span class="stat" id="stat2"></span>
+    </div>
+    <div class="table-wrap">
+      <table class="grid" id="grid">
+        <thead>
+          <tr>
+            <th class="idx">#</th>
+            <th>uuid</th>
+            <th>log_id</th>
+            <th>text</th>
+            <th>断句时长<br><span style="font-weight:400;color:#7b8998">(definite:true, ms)</span></th>
+            <th>断句时长<br><span style="font-weight:400;color:#7b8998">是否大于十秒</span></th>
+            <th>记录时间</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="more-box" class="more" style="display:none">
+        <button class="btn" id="btn-more">加载更多</button>
+        <span id="more-txt" style="margin-left:10px"></span>
+      </div>
+      <div class="empty" id="empty">还没有记录，粘贴日志或选择 JSON 文件试试</div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script type="application/json" id="seed">[{"uuid":"fe5f9c25-5268-47c0-98d5-9ab16e6772c3","log_id":"202611031025309F2B61C4A8D07E5B3C91","text":"您这条裤子的话，现在下单是可以走预售库存的，四十八小时之内我们就能发出去。然后这个颜色我们现在补货的消息还没有，因为工厂那边排期比较满，但是同款的另外两个颜色都是有现货的。您如果着急的话，我建议您先看另外两个颜色。那我再看看","duration_ms":20300,"over10":true,"record_time":"2026-11-03 10:26:12","definite_count":1,"total_count":2,"audio_duration":672500,"error":false,"error_msg":"","segments":[{"definite":true,"start_time":650531,"end_time":670831,"duration":20300,"text":"您这条裤子的话，现在下单是可以走预售库存的，四十八小时之内我们就能发出去。然后这个颜色我们现在补货的消息还没有，因为工厂那边排期比较满，但是同款的另外两个颜色都是有现货的。您如果着急的话，我建议您先看另外两个颜色。"},{"definite":false,"start_time":670831,"end_time":672303,"duration":1472,"text":"那我再看看"}],"ref":{"durationAllMs":21772,"spanMs":21772}},{"uuid":"3c7d41b8-9a02-4e6f-8b13-7f5e2c9d0a44","log_id":"2026110310551877E0D2A5C93B4F61E8D0","text":"对的，这个尺码的话您拍大一码会更合适一点，我们自己同事平时也是这么穿的。","duration_ms":6800,"over10":false,"record_time":"2026-11-03 10:56:03","definite_count":1,"total_count":1,"audio_duration":1293000,"error":false,"error_msg":"","segments":[{"definite":true,"start_time":1284400,"end_time":1291200,"duration":6800,"text":"对的，这个尺码的话您拍大一码会更合适一点，我们自己同事平时也是这么穿的。"}],"ref":{"durationAllMs":6800,"spanMs":6800}},{"uuid":"9b2e6a10-4f38-4c77-a1d5-6e83b0c47f92","log_id":"2026110311314421B7C5E9A0D34F82C6B7","text":"嗯，这个我再帮您看一下吧","duration_ms":0,"over10":false,"record_time":"2026-11-03 11:32:20","definite_count":0,"total_count":2,"audio_duration":88400,"error":true,"error_msg":"未找到 definite:true 片段（应恰好 1 个），断句时长无法确定","segments":[{"definite":false,"start_time":0,"end_time":4200,"duration":4200,"text":"嗯，这个我再帮您"},{"definite":false,"start_time":4200,"end_time":8800,"duration":4600,"text":"看一下吧"}],"ref":{"durationAllMs":8800,"spanMs":8800}}]</script>
+<script>
+/* ============================================================
+   断句时长取数 parser（原 parser.js 已丢失，按页面「固定取数规则」重建）
+   对外接口：window.VoiceLogParser = { RE, parse, nowText, logIdToTime }
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var MARKER = 'obsClientUuid:';
+  var JSON_MARKER = '火山语音识别返回结果转对象:';
+  var UUID_RE = /obsClientUuid:\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/;
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function nowText(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  /** 规则②附注：log_id 前 14 位是日志自身时间，仅作参考，不落表 */
+  function logIdToTime(logId) {
+    if (!logId || !/^\d{14}/.test(logId)) return null;
+    var s = String(logId).slice(0, 14);
+    var y = +s.slice(0, 4), mo = +s.slice(4, 6), d = +s.slice(6, 8);
+    var h = +s.slice(8, 10), mi = +s.slice(10, 12), se = +s.slice(12, 14);
+    if (!(y >= 2000 && y <= 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return null;
+    if (h > 23 || mi > 59 || se > 59) return null;
+    return y + '-' + pad(mo) + '-' + pad(d) + ' ' + pad(h) + ':' + pad(mi) + ':' + pad(se);
+  }
+
+  /** 从 from 之后找到第一个「配平的」JSON 对象（字符串内的括号/引号不算） */
+  function extractJson(text, from) {
+    var start = -1, i;
+    for (i = from; i < text.length; i++) { if (text.charAt(i) === '{') { start = i; break; } }
+    if (start < 0) return null;
+    var depth = 0, inStr = false, esc = false, c;
+    for (i = start; i < text.length; i++) {
+      c = text.charAt(i);
+      if (inStr) {
+        if (esc) { esc = false; }
+        else if (c === '\\') { esc = true; }
+        else if (c === '"') { inStr = false; }
+      } else {
+        if (c === '"') { inStr = true; }
+        else if (c === '{') { depth++; }
+        else if (c === '}') { depth--; if (depth === 0) return text.slice(start, i + 1); }
+      }
+    }
+    return null; // 没配平：多半是复制时被截断
+  }
+
+  function blank(extra) {
+    var o = {
+      uuid: '', logId: '', logIdTime: null, text: '',
+      durationMs: 0, over10s: false, recordTime: nowText(),
+      audioDuration: null, totalCount: 0, definiteCount: 0,
+      segments: [], ref: { durationAllMs: 0, spanMs: 0 },
+      error: false, errorMsg: '', parseFail: false
+    };
+    if (extra) { for (var k in extra) { o[k] = extra[k]; } }
+    return o;
+  }
+
+  function parse(raw) {
+    var src = String(raw == null ? '' : raw);
+    if (!src.trim()) {
+      return blank({ error: true, parseFail: true, errorMsg: '空内容' });
+    }
+
+    var rec = blank({});
+    var u = UUID_RE.exec(src);
+    if (u) { rec.uuid = u[1]; }
+
+    // 1. 定位 JSON
+    var jm = src.indexOf(JSON_MARKER);
+    var jsonText = jm >= 0 ? extractJson(src, jm + JSON_MARKER.length) : null;
+    if (!jsonText) { jsonText = extractJson(src, 0); }
+    if (!jsonText) {
+      return blank({
+        uuid: rec.uuid, error: true, parseFail: true,
+        errorMsg: jm < 0
+          ? '没找到「' + JSON_MARKER + '」，确认是否粘全了'
+          : '「' + JSON_MARKER + '」后面的 JSON 不完整（括号没配平）'
+      });
+    }
+
+    // 2. JSON.parse（失败时再试一次“去转义”，兼容被包成 {"content":"..."} 的日志）
+    var obj = null, lastErr = null, tries = [jsonText];
+    tries.push(jsonText.replace(/\\"/g, '"').replace(/\\\\/g, '\\'));
+    for (var t = 0; t < tries.length; t++) {
+      try { obj = JSON.parse(tries[t]); break; } catch (e) { lastErr = e; }
+    }
+    if (!obj) {
+      return blank({
+        uuid: rec.uuid, error: true, parseFail: true,
+        errorMsg: 'JSON 解析失败：' + (lastErr && lastErr.message ? lastErr.message : '未知错误')
+      });
+    }
+
+    // 3. 按路径取数
+    var result = obj.result || {};
+    var adds = result.additions || {};
+    rec.logId = adds.log_id || adds.logId || '';
+    rec.logIdTime = logIdToTime(rec.logId);
+    rec.text = typeof result.text === 'string' ? result.text : '';
+
+    var ai = obj.audio_info || obj.audioInfo || {};
+    var dur = ai.duration != null ? ai.duration : obj.duration;
+    rec.audioDuration = dur == null ? null : Number(dur);
+
+    var utts = result.utterances || result.utterance || obj.utterances || [];
+    var segs = Object.prototype.toString.call(utts) === '[object Array]' ? utts : [];
+
+    // 4. 规则④：只累加 definite === true 的 (end_time - start_time)
+    var allSum = 0, defSum = 0, defCount = 0, minStart = null, maxEnd = null;
+    rec.segments = segs.map(function (s, i) {
+      var st = Number(s.start_time != null ? s.start_time : s.startTime) || 0;
+      var et = Number(s.end_time != null ? s.end_time : s.endTime) || 0;
+      var d = et >= st ? et - st : 0;
+      var def = (s.definite === true || s.definite === 'true');
+      allSum += d;
+      if (def) { defSum += d; defCount++; }
+      if (minStart === null || st < minStart) { minStart = st; }
+      if (maxEnd === null || et > maxEnd) { maxEnd = et; }
+      return {
+        index: i, definite: def, start_time: st, end_time: et, duration: d,
+        text: typeof s.text === 'string' ? s.text : ''
+      };
+    });
+
+    rec.totalCount = segs.length;
+    rec.definiteCount = defCount;
+    rec.durationMs = defSum;
+    rec.over10s = defSum > 10000;
+    rec.ref = {
+      durationAllMs: allSum,
+      spanMs: minStart === null ? 0 : (maxEnd - minStart)
+    };
+
+    // 5. 规则⑦：正常应恰好 1 个 definite:true
+    if (defCount !== 1) {
+      rec.error = true;
+      rec.errorMsg = defCount === 0
+        ? '未找到 definite:true 片段（应恰好 1 个），断句时长无法确定'
+        : 'definite:true 片段有 ' + defCount + ' 个（应恰好 1 个），时长不可直接相加';
+    }
+    return rec;
+  }
+
+  window.VoiceLogParser = {
+    RE: { marker: MARKER, jsonMarker: JSON_MARKER },
+    parse: parse,
+    nowText: nowText,
+    logIdToTime: logIdToTime
+  };
+})();
+</script>
+<script>
+'use strict';
+const LS_KEY = 'volc_voice_log_rows_v2';   // v2：记录时间取值变更，换 key 避免与旧数据混淆
+const LS_MAX = 3 * 1024 * 1024;            // 超过 3MB 就不写本地存储
+const PAGE = 300;                         // 每次渲染的行数（大批量时分批渲染，避免卡死）
+const $ = s => document.querySelector(s);
+const P = window.VoiceLogParser;
+
+/* ================= 状态 ================= */
+let rows = load();            // 表格数据（持久化）
+let segMap = {};              // id -> 片段明细（仅内存，刷新后只在有值时展示）
+let shown = 0;                // 当前已渲染行数
+let errOnly = false;
+let filter = '';
+
+function uid(){ return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const d = JSON.parse(raw); if(Array.isArray(d) && d.length) return d; }
+  }catch(e){}
+  try{ return JSON.parse($('#seed').textContent); }catch(e){ return []; }
+}
+function save(){
+  try{
+    const s = JSON.stringify(rows);
+    if(s.length > LS_MAX){
+      $('#input-hint').innerHTML = '数据量较大，已停止写入浏览器本地存储（当前会话内正常使用）';
+      return;
+    }
+    localStorage.setItem(LS_KEY, s);
+  }catch(e){
+    $('#input-hint').innerHTML = '本地存储写入失败（可能已满），数据仍在当前页面内';
+  }
+}
+
+/* ================= 工具 ================= */
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+let toastTimer;
+function toast(msg, isErr, ms){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.className = ''; }, ms || 2400);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok = document.execCommand('copy'); }catch(_){}
+    ta.remove();
+    return ok;
+  }
+}
+function isOver10(r){ return r.over10 === true || r.over10s === true; }
+function badge(v){
+  return v ? '<span class="pill yes">是</span>' : '<span class="pill no">否</span>';
+}
+/** 异步解析：每 40ms 让出主线程，避免大批量把页面卡死 */
+function parseSegmentsAsync(segs, onProgress){
+  return new Promise(resolve => {
+    const out = [];
+    let i = 0, ok = 0, bad = 0, fail = 0;
+    function step(){
+      const t0 = Date.now();
+      while(i < segs.length && Date.now() - t0 < 40){
+        try{
+          const r = P.parse(segs[i]);
+          out.push(r);
+          if(r.error) bad++; else ok++;
+        }catch(e){
+          out.push({ ok:false, error:true, errorMsg:'解析失败：' + e.message,
+                     uuid:'', logId:'', text:'', durationMs:0, over10s:false,
+                     recordTime:'', segments:[], definiteCount:0, totalCount:0,
+                     ref:{durationAllMs:0, spanMs:0}, parseFail:true });
+          fail++;
+        }
+        i++;
+      }
+      if(onProgress) onProgress({done:i, total:segs.length, ok:ok, bad:bad, fail:fail});
+      if(i < segs.length) setTimeout(step, 0);
+      else resolve({rows:out, ok:ok, bad:bad, fail:fail});
+    }
+    step();
+  });
+}
+
+/* ================= 渲染 ================= */
+function filtered(){
+  if(!filter && !errOnly) return rows;
+  const f = filter.toLowerCase();
+  return rows.filter(r=>{
+    if(errOnly && !r.error) return false;
+    if(!f) return true;
+    return (r.uuid||'').toLowerCase().includes(f)
+        || (r.log_id||'').toLowerCase().includes(f)
+        || (r.text||'').toLowerCase().includes(f);
+  });
+}
+function rowHtml(r, i){
+  const e = !!r.error;
+  return `<tr data-i="${i}" class="${e?'badrow':''}">
+      <td class="idx">${i+1}</td>
+      <td class="mono">${esc(r.uuid)}</td>
+      <td class="mono">${esc(r.log_id)}</td>
+      <td class="text">${esc(r.text)}</td>
+      ${e
+        ? `<td class="err">⚠ ${esc(r.error_msg||'异常')}</td><td><span class="pill err">—</span></td>`
+        : `<td class="num"><b>${r.duration_ms}</b> <span style="color:var(--fg-mute)">ms</span></td><td>${badge(isOver10(r))}</td>`}
+      <td class="mono" style="white-space:nowrap">${esc(r.record_time)}</td>
+      <td class="actions">
+        <button class="iconbtn" data-act="detail" title="查看断句明细">明细</button>
+        <button class="iconbtn" data-act="copy" title="复制本行 text">复制</button>
+        <button class="iconbtn del" data-act="del" title="删除本行">删除</button>
+      </td>
+    </tr>`;
+}
+function updateStats(){
+  const total = rows.length;
+  const errs  = rows.filter(r=>r.error).length;
+  const over  = rows.filter(r=>!r.error && isOver10(r)).length;
+  const sum   = rows.reduce((s,r)=>s + (r.error?0:Number(r.duration_ms||0)), 0);
+  $('#stat').innerHTML = total
+    ? `共 <b>${total}</b> 条 · 超10s <b>${over}</b> 条${errs?` · <b style="color:#ff9a9a">异常 ${errs}</b>`:''}`
+    : '暂无记录';
+  const f = filtered();
+  $('#stat2').innerHTML = `显示 <b>${Math.min(shown, f.length)}</b> / <b>${f.length}</b> 行`
+    + (f.length !== total ? `（已筛选，共 ${total} 行）` : '')
+    + ` · 时长合计 <b>${sum}</b> ms`
+    + (errs ? ` · <span class="warn">异常 ${errs} 行</span>` : '');
+}
+function render(reset){
+  const f = filtered();
+  const tb = $('#tbody');
+  if(reset){ tb.innerHTML = ''; shown = 0; }
+  const next = f.slice(shown, shown + PAGE);
+  if(next.length){
+    tb.insertAdjacentHTML('beforeend', next.map((r,k)=>rowHtml(r, shown + k)).join(''));
+    shown += next.length;
+  }
+  $('#empty').style.display = f.length ? 'none' : 'block';
+  if(!f.length && rows.length) $('#empty').textContent = '没有符合筛选条件的记录';
+  else if(!rows.length) $('#empty').textContent = '还没有记录，粘贴日志或选择 JSON 文件试试';
+  const left = f.length - shown;
+  $('#more-box').style.display = left > 0 ? 'block' : 'none';
+  $('#more-txt').textContent = left > 0 ? `还有 ${left} 行未渲染` : '';
+  updateStats();
+  save();
+}
+
+/* ================= 预览 ================= */
+function segTable(r){
+  if(!r.segments || !r.segments.length) return '';
+  return `
+    <div class="seg-list">
+      <table>
+        <thead><tr><th style="width:44px">片段</th><th style="width:56px">definite</th>
+          <th>start_time</th><th>end_time</th><th>Δ (ms)</th><th>文本</th></tr></thead>
+        <tbody>${r.segments.map((s,i)=>`
+          <tr>
+            <td class="mono">#${i+1}</td>
+            <td class="${s.definite?'tagT':'tagF'}">${s.definite?'true':'false'}</td>
+            <td class="mono">${s.start_time}</td>
+            <td class="mono">${s.end_time}</td>
+            <td class="mono" style="white-space:nowrap;${s.definite?'color:#e6edf3;font-weight:600':'color:#5d6b7c'}">${s.duration}</td>
+            <td style="color:${s.definite?'#e6edf3':'#5d6b7c'}">${esc(String(s.text||'').slice(0,46))}${String(s.text||'').length>46?'…':''}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <p style="font-size:11.5px;color:var(--fg-mute);margin:8px 0 0">
+        ${r.definiteCount===1
+          ? `断句时长 = 加粗行的 Δ = <b style="color:var(--accent)">${r.durationMs} ms</b>`
+          : `<b style="color:#ff8080">definite:true 片段数 = ${r.definiteCount}（异常）</b>，加粗行仅用于核对`}
+        ｜ 参考：全部片段合计 ${r.ref.durationAllMs} ms，时间轴首尾跨度 ${r.ref.spanMs} ms
+      </p>
+    </div>`;
+}
+function renderPreview(r, err){
+  const box = $('#preview');
+  if(!err && !r){
+    box.innerHTML = '<div class="empty">粘贴或选择日志后自动预览取数结果</div>';
+    $('#preview-tag').textContent = '等待输入';
+    return;
+  }
+  if(err){
+    $('#preview-tag').textContent = '解析失败';
+    box.innerHTML = `<div class="empty" style="color:#ff9a9a;text-align:left;line-height:1.8">
+        解析失败：${esc(err.message)}<br>
+        <span style="color:var(--fg-mute)">请确认是否完整粘贴了「火山语音识别返回结果转对象:」后面的 JSON。</span>
+      </div>`;
+    return;
+  }
+  const e = !!r.error;
+  $('#preview-tag').textContent = e ? '发现异常' : '解析成功';
+  box.innerHTML = `
+    ${e ? `<div class="alertbox">⚠ <b>异常</b>：${esc(r.errorMsg)}<br>
+      该行不会按正常值统计，请在「断句时长」列按提示核对。</div>` : ''}
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+      <div class="big" style="${e?'color:#ff9a9a;font-size:15px;font-weight:600':''}">
+        ${e ? '数据异常' : r.durationMs + ' <span style="font-size:13px;color:var(--fg-mute);font-weight:400">ms</span>'}
+      </div>
+      <div>${e ? '<span class="pill err">异常</span>' : badge(isOver10(r))}
+        <span style="font-size:12px;color:var(--fg-mute);margin-left:6px">断句时长是否大于十秒</span></div>
+    </div>
+    <dl class="kv">
+      <dt>uuid</dt><dd>${esc(r.uuid)||'<span style="color:#ff9a9a">未匹配到</span>'}</dd>
+      <dt>log_id</dt><dd>${esc(r.logId)||'<span style="color:#ff9a9a">未匹配到</span>'}
+        ${r.logIdTime?`<span style="color:var(--fg-mute)">（日志时间 ${esc(r.logIdTime)}）</span>`:''}</dd>
+      <dt>记录时间</dt><dd>${esc(r.recordTime)||'—'} <span style="color:var(--fg-mute)">（当前时间）</span></dd>
+      <dt>音频时长</dt><dd>${r.audioDuration==null?'—':r.audioDuration+' ms'}</dd>
+      <dt>片段统计</dt><dd>共 ${r.totalCount} 段，其中 definite:true
+        <b style="color:${r.definiteCount===1?'#56d364':'#ff8080'}">${r.definiteCount}</b> 段</dd>
+      <dt>text 长度</dt><dd>${(r.text||'').length} 字</dd>
+    </dl>
+    ${segTable(r)}`;
+}
+
+/* ================= 切分日志 ================= */
+function sliceLog(text, markerIdx, nextMarkerIdx){
+  const lineStart = text.lastIndexOf('\n', markerIdx - 1) + 1;
+  const end = (nextMarkerIdx == null) ? text.length : nextMarkerIdx;
+  return text.slice(lineStart, end).trim();
+}
+function splitLogs(raw){
+  const text = String(raw||'');
+  const marker = P.RE.marker;
+  const mark = [];
+  let idx = 0;
+  while(true){
+    const i = text.indexOf(marker, idx);
+    if(i < 0) break;
+    mark.push(i);
+    idx = i + marker.length;
+  }
+  if(!mark.length) return text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  return mark.map((start, k) => sliceLog(text, start, mark[k+1])).filter(Boolean);
+}
+
+/* ================= 入表 ================= */
+function toRow(r){
+  return {
+    id: uid(),
+    uuid: r.uuid,
+    log_id: r.logId,
+    text: r.text,
+    duration_ms: r.durationMs,
+    over10: r.over10s,
+    record_time: r.recordTime,
+    definite_count: r.definiteCount,
+    total_count: r.totalCount,
+    audio_duration: r.audioDuration,
+    error: !!r.error,
+    error_msg: r.errorMsg || '',
+    ref: r.ref ? { durationAllMs: r.ref.durationAllMs, spanMs: r.ref.spanMs } : undefined
+  };
+}
+
+async function addFromRaw(raw, label){
+  const segs = splitLogs(raw);
+  if(!segs.length){ toast('没有找到可解析的日志内容', true); return; }
+  const needConfirm = segs.length > 1000;
+  if(needConfirm && !confirm(`本批共 ${segs.length} 条日志，确认全部解析并加入表格？`)) return;
+
+  $('#btn-parse').disabled = true;
+  const t0 = Date.now();
+  const res = await parseSegmentsAsync(segs, p=>{
+    const pct = Math.round(p.done / p.total * 100);
+    $('#preview').innerHTML = `
+      <div class="prog">
+        <div style="color:var(--fg)">正在解析${label?` ${esc(label)}`:''}…</div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="row"><span>进度 <b>${p.done}/${p.total}</b>（${pct}%）</span>
+          <span>正常 <b>${p.ok}</b></span>
+          <span>异常 <b style="color:#ff9a9a">${p.bad}</b></span>
+          ${p.fail?`<span>失败 <b style="color:#ff9a9a">${p.fail}</b></span>`:''}</div>
+      </div>`;
+    $('#preview-tag').textContent = '解析中…';
+  });
+  $('#btn-parse').disabled = false;
+
+  const seen = new Set(rows.map(r => r.log_id + '|' + r.uuid));
+  let added = 0, dup = 0;
+  res.rows.forEach(r=>{
+    const key = r.logId + '|' + r.uuid;
+    if(!r.parseFail && seen.has(key)){ dup++; return; }
+    if(!r.parseFail) seen.add(key);
+    const row = toRow(r);
+    rows.push(row);
+    if(r.segments && r.segments.length) segMap[row.id] = r.segments;
+    added++;
+  });
+
+  render(true);
+  const first = res.rows.find(r=>!r.error) || res.rows[0];
+  renderPreview(first);
+  const secs = ((Date.now()-t0)/1000).toFixed(1);
+  const parts = [`新增 ${added} 条`];
+  if(dup) parts.push(`跳过重复 ${dup} 条`);
+  if(res.bad) parts.push(`异常 ${res.bad} 条`);
+  if(res.fail) parts.push(`解析失败 ${res.fail} 条`);
+  toast(parts.join('，') + `（耗时 ${secs}s）`, res.bad + res.fail > 0);
+  if(res.bad) $('#search').placeholder = `有 ${res.bad} 条异常，可点「只看异常」查看`;
+}
+
+async function handleFiles(files){
+  for(const f of files){
+    let text;
+    try{ text = await f.text(); }
+    catch(e){ toast(`读取失败：${f.name}`, true); continue; }
+
+    const isJson = /\.json$/i.test(f.name) || text.trimStart().startsWith('{"rows"') || text.trimStart().startsWith('[{');
+    if(isJson){
+      let data;
+      try{ data = JSON.parse(text); }
+      catch(e){
+        // JSON 文件里其实是原始日志（每行一条）的兜底
+        await addFromRaw(text, f.name);
+        continue;
+      }
+      const list = Array.isArray(data) ? data : (Array.isArray(data.rows) ? data.rows : null);
+      if(!list){ toast(`${f.name} 结构不认识（应为数组或 {rows:[...]}）`, true); continue; }
+      await addFromParsed(list, f.name);
+    } else {
+      await addFromRaw(text, f.name);
+    }
+  }
+  $('#file').value = '';
+}
+
+/** 表格型 JSON（已取好数的行）直接入表 */
+async function addFromParsed(list, label){
+  const seen = new Set(rows.map(r => r.log_id + '|' + r.uuid));
+  let added = 0, dup = 0, bad = 0;
+  for(const it of list){
+    const logId = it.log_id || it.logId || '';
+    const uuid  = it.uuid || '';
+    const key = logId + '|' + uuid;
+    if(seen.has(key)){ dup++; continue; }
+    seen.add(key);
+    const dur = Number(it.duration_ms != null ? it.duration_ms : it.durationMs) || 0;
+    const errFlag = it.error === true || Number(it.definite_count) > 1 || Number(it.definite_count) === 0;
+    if(errFlag) bad++;
+    const row = {
+      id: it.id || uid(),
+      uuid: uuid,
+      log_id: logId,
+      text: it.text || '',
+      duration_ms: dur,
+      over10: it.over10 != null ? !!it.over10 : (it.over10s != null ? !!it.over10s : dur > 10000),
+      record_time: it.record_time || it.recordTime || P.nowText(),
+      definite_count: Number(it.definite_count != null ? it.definite_count : it.definiteCount) || 0,
+      total_count: Number(it.total_count != null ? it.total_count : it.totalCount) || 0,
+      audio_duration: it.audio_duration != null ? it.audio_duration : (it.audioDuration || null),
+      error: errFlag,
+      error_msg: it.error_msg || it.errorMsg || (errFlag ? `definite:true 片段数异常（${Number(it.definite_count != null ? it.definite_count : it.definiteCount)}）` : '')
+    };
+    rows.push(row);
+    if(Array.isArray(it.segments) && it.segments.length) segMap[row.id] = it.segments;
+    added++;
+  }
+  render(true);
+  toast(`${label||'JSON'}：新增 ${added} 条${dup?`，跳过重复 ${dup} 条`:''}${bad?`，异常 ${bad} 条`:''}`, bad > 0);
+}
+
+/* ================= 事件 ================= */
+const inputEl = $('#input');
+
+$('#btn-parse').onclick = ()=> addFromRaw(inputEl.value, '');
+$('#btn-preview').onclick = previewNow;
+
+inputEl.addEventListener('input', ()=>{ clearTimeout(window.__pv); window.__pv = setTimeout(previewNow, 150); });
+inputEl.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key === 'Enter'){ e.preventDefault(); addFromRaw(inputEl.value, ''); }
+});
+
+$('#file').addEventListener('change', e=>{
+  const files = Array.from(e.target.files || []);
+  if(files.length) handleFiles(files);
+});
+
+// 拖拽进文本框 = 选文件
+inputEl.addEventListener('dragover', e=>{ e.preventDefault(); $('#drop').classList.add('over'); });
+inputEl.addEventListener('dragleave', ()=> $('#drop').classList.remove('over'));
+inputEl.addEventListener('drop', e=>{
+  e.preventDefault();
+  $('#drop').classList.remove('over');
+  const files = Array.from(e.dataTransfer && e.dataTransfer.files || []);
+  if(files.length) handleFiles(files);
+  else if(e.dataTransfer) inputEl.value = e.dataTransfer.getData('text') || inputEl.value;
+});
+
+$('#search').addEventListener('input', e=>{ filter = e.target.value.trim(); render(true); });
+$('#btn-err-only').onclick = ()=>{
+  errOnly = !errOnly;
+  $('#btn-err-only').textContent = errOnly ? '显示全部' : '只看异常';
+  $('#btn-err-only').className = 'btn' + (errOnly ? ' primary' : ' ghost');
+  render(true);
+};
+$('#btn-more').onclick = ()=> render(false);
+
+$('#tbody').addEventListener('click', e=>{
+  const tr = e.target.closest('tr');
+  if(!tr) return;
+  const i = Number(tr.dataset.i);
+  const r = rows[i];
+  if(!r) return;
+  const btn = e.target.closest('button[data-act]');
+  const act = btn ? btn.dataset.act : 'detail';
+
+  if(act === 'del'){
+    if(confirm(`删除第 ${i+1} 行？\n\n注意：只从本页面删除，不会改动「日志记录.xlsx」。`)){
+      const id = r.id;
+      rows.splice(i, 1);
+      delete segMap[id];
+      if(shipped) shipped = true;
+      render(true);
+      toast('已删除（Excel 未改动）');
+    }
+    return;
+  }
+  if(act === 'copy'){
+    copyText(r.text).then(ok=> toast(ok ? 'text 已复制' : '复制失败，请手动选择', !ok));
+    return;
+  }
+  // 明细
+  const segs = segMap[r.id] || (r.segments || []);
+  renderPreview({
+    error: !!r.error, errorMsg: r.error_msg,
+    durationMs: r.duration_ms, over10s: isOver10(r),
+    uuid: r.uuid, logId: r.log_id, recordTime: r.record_time,
+    logIdTime: P.logIdToTime(r.log_id),
+    audioDuration: r.audio_duration,
+    totalCount: r.total_count, definiteCount: r.definite_count,
+    text: r.text, segments: segs,
+    ref: r.ref || { durationAllMs: '—', spanMs: '—' }
+  });
+  document.querySelectorAll('#tbody tr').forEach(t=>t.classList.remove('sel'));
+  tr.classList.add('sel');
+  $('#preview').scrollIntoView({behavior:'smooth', block:'center'});
+});
+
+$('#btn-copy').onclick = ()=>{
+  if(!rows.length){ toast('没有可复制的数据', true); return; }
+  const head = ['uuid','log_id','text','断句时长(ms)','断句时长是否大于十秒','记录时间'];
+  const body = rows.map(r=>[
+    r.uuid, r.log_id, r.text,
+    r.error ? `异常：${r.error_msg}` : r.duration_ms,
+    r.error ? '—' : (r.over10 ? '是' : '否'),
+    r.record_time
+  ].map(v=>String(v==null?'':v).replace(/[\t\r\n]/g,' ')).join('\t'));
+  copyText([head.join('\t'), ...body].join('\n'))
+    .then(ok=>toast(ok ? `已复制 ${rows.length} 行（制表符分隔，可直接粘贴到 Excel）` : '复制失败', !ok, 3200));
+};
+
+$('#btn-json').onclick = ()=>{
+  const out = rows.map(r=>{
+    const o = {
+      uuid:r.uuid, log_id:r.log_id, text:r.text,
+      duration_ms:r.duration_ms, over10:r.over10, record_time:r.record_time,
+      definite_count:r.definite_count, total_count:r.total_count,
+      audio_duration:r.audio_duration, error:r.error, error_msg:r.error_msg
+    };
+    if(segMap[r.id]) o.segments = segMap[r.id];
+    return o;
+  });
+  const blob = new Blob([JSON.stringify({rows: out}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '断句时长记录_' + P.nowText().replace(/[-: ]/g,'') + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已导出 JSON');
+};
+
+$('#btn-clear').onclick = ()=>{
+  if(!rows.length) return;
+  if(confirm(`清空全部 ${rows.length} 行记录？\n\n注意：只清空本页面，不会改动「日志记录.xlsx」。`)){
+    rows = []; segMap = {}; render(true); renderPreview(null); toast('已清空');
+  }
+};
+
+$('#btn-rules').onclick = ()=>{
+  const el = $('#rules');
+  const hide = el.style.display === 'none';
+  el.style.display = hide ? '' : 'none';
+  $('#btn-rules').textContent = hide ? '规则说明' : '显示规则';
+};
+
+$('#btn-sample').onclick = ()=>{
+  inputEl.value = SAMPLES[sampleIdx % SAMPLES.length];
+  sampleIdx++;
+  previewNow();
+  toast('已载入示例 ' + ((sampleIdx - 1) % SAMPLES.length + 1) + '/' + SAMPLES.length
+        + '（正常 / 正常 / 异常各一条，再点换下一条）');
+};
+
+let shipped = false;
+function previewNow(){
+  const raw = inputEl.value.trim();
+  if(!raw){ renderPreview(null); return; }
+  try{
+    const segs = splitLogs(raw);
+    if(!segs.length) throw new Error('未找到可解析的日志内容');
+    const r = P.parse(segs[0]);
+    $('#preview-tag').textContent = segs.length > 1 ? `共 ${segs.length} 条，显示第 1 条` : '解析成功';
+    renderPreview(r);
+  }catch(e){
+    renderPreview(null, e);
+  }
+}
+
+/* ================= 示例日志（脱敏虚构，三条轮换） ================= */
+const SAMPLES = [
+  String.raw`obsClientUuid:fe5f9c25-5268-47c0-98d5-9ab16e6772c3 火山语音识别返回结果转对象:{"audio_info":{"duration":672500},"result":{"additions":{"log_id":"202611031025309F2B61C4A8D07E5B3C91"},"text":"您这条裤子的话，现在下单是可以走预售库存的，四十八小时之内我们就能发出去。然后这个颜色我们现在补货的消息还没有，因为工厂那边排期比较满，但是同款的另外两个颜色都是有现货的。您如果着急的话，我建议您先看另外两个颜色。那我再看看","utterances":[{"definite":true,"end_time":670831,"start_time":650531,"text":"您这条裤子的话，现在下单是可以走预售库存的，四十八小时之内我们就能发出去。然后这个颜色我们现在补货的消息还没有，因为工厂那边排期比较满，但是同款的另外两个颜色都是有现货的。您如果着急的话，我建议您先看另外两个颜色。"},{"definite":false,"end_time":672303,"start_time":670831,"text":"那我再看看"}]}}`,
+  String.raw`obsClientUuid:3c7d41b8-9a02-4e6f-8b13-7f5e2c9d0a44 火山语音识别返回结果转对象:{"audio_info":{"duration":1293000},"result":{"additions":{"log_id":"2026110310551877E0D2A5C93B4F61E8D0"},"text":"对的，这个尺码的话您拍大一码会更合适一点，我们自己同事平时也是这么穿的。","utterances":[{"definite":true,"end_time":1291200,"start_time":1284400,"text":"对的，这个尺码的话您拍大一码会更合适一点，我们自己同事平时也是这么穿的。"}]}}`,
+  String.raw`obsClientUuid:9b2e6a10-4f38-4c77-a1d5-6e83b0c47f92 火山语音识别返回结果转对象:{"audio_info":{"duration":88400},"result":{"additions":{"log_id":"2026110311314421B7C5E9A0D34F82C6B7"},"text":"嗯，这个我再帮您看一下吧","utterances":[{"definite":false,"end_time":4200,"start_time":0,"text":"嗯，这个我再帮您"},{"definite":false,"end_time":8800,"start_time":4200,"text":"看一下吧"}]}}`
+];
+let sampleIdx = 0;
+
+/* ================= 启动 ================= */
+render(true);
+/* ?sample=1|2|3 直接载入对应示例并预览（方便截图，也方便从作品集链接进来直接看到结果） */
+(function(){
+  const sp = new URLSearchParams(location.search).get('sample');
+  if(!sp){ previewNow(); return; }
+  const i = Math.max(0, Math.min(SAMPLES.length - 1, (parseInt(sp, 10) || 1) - 1));
+  inputEl.value = SAMPLES[i];
+  sampleIdx = i + 1;
+  previewNow();
+})();
+</script>
+</body>
+</html>

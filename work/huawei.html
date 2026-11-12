@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>直播违规话术实时检测 · 华为 | 李陈斌</title>
+<meta name="description" content="把 25 秒的迟到，从一个性能问题拆成一个可调参数：链路拆解、badcase 聚类、断句参数灰度。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="../index.html">LC</a>
+  <div class="menu">
+    <a href="../index.html">Home | 主页</a>
+    <a href="../work.html" class="on">Portfolio | 作品集</a>
+    <a href="../about.html">About Us | 关于我</a>
+  </div>
+  <div class="right"><a href="../assets/resume.pdf" download>简历 PDF</a></div>
+</nav>
+
+<header class="p-hero one">
+  <div class="crumbs"><a href="../index.html">Home</a><span>/</span><a href="../work.html">Portfolio</a><span>/</span>华为 · 直播违规检测</div>
+  <div class="eyebrow">Case 02 | 杭州维妥科技 · 2026.05 — 2026.09</div>
+  <h1>25 秒的迟到，查到最后是一行配置。</h1>
+  <p class="claim">观众看到的画面本来就晚 20 秒，检测再叠加就必然超时。最后定位到的不是模型，是断句。</p>
+
+  <dl class="p-meta">
+    <div><dt>我的角色</dt><dd>产品经理（维护与迭代）</dd></div>
+    <div><dt>团队</dt><dd>3 后端 / 2 前端 / 1 测试</dd></div>
+    <div><dt>覆盖</dt><dd>27 个直播间</dd></div>
+    <div><dt>指标</dt><dd>端到端 ≤ 15s</dd></div>
+  </dl>
+</header>
+
+<main>
+  <div class="figwrap rv">
+    <figure>
+      <img src="../assets/img/huawei-latency.svg" alt="端到端延迟的时间轴：观众看到的直播画面天然滞后 20 秒，检测侧要等 ASR 出文本才能判定，两者叠加就是客户说的 25 秒">
+      <figcaption><b>图 1</b> · 把延迟摊在时间轴上（脱敏）。观众看到的画面本来就晚 20 秒；检测要等 ASR 断句出文本才能判断，这段等待叠在 20 秒之上，就是客户说的“25 秒才出告警”。切 TVC 之后观众会再滞后一次——所以处置动作本身也会被延迟放大。</figcaption>
+    </figure>
+  </div>
+
+  <section class="chapter">
+    <div class="num">01<span>Context</span></div>
+    <div class="content rv">
+      <h2>背景：27 个直播间，靠人盯不住</h2>
+      <p>客户在电商平台做实时直播卖货，主播说的话即时、不可预演。政治敏感、历史纪念日、明星侵权、低俗擦边，或者对消费者表达不耐烦，都会形成实际合规风险。靠人工盯 27 个直播间不现实。</p>
+      <p>系统五段：<b>OBS 采集音频 → 火山云 ASR → 自研 AI 能力中台判断 → 定制看板 → 分级处置</b>（轻微提醒，中级与严重切 TVC 广告）。我接手时链路已经跑通，我的工作是让它少冤枉人、少迟到。</p>
+      <p>“迟到”这件事有明确的验收口径：从主播说完到看板出现告警，端到端 ≤ 15 秒。客户反馈的实际体验是 25 秒左右。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">02<span>Problem</span></div>
+    <div class="content rv">
+      <h2>问题：25 秒，先别急着怪模型</h2>
+      <p>团队里最自然的假设是“模型慢”。但这是一个可以被拆开的数字：把 25 秒拆成“采集 + 转写 + 判断 + 推送”四段，量一遍就知道钱花在哪。</p>
+      <p>实测结果：自研检测服务耗时稳定低于 2 秒。也就是说，就算模型快到 0 秒，端到端也还是 20 秒以上——瓶颈不在判断，在<b>什么时候拿到文本</b>。</p>
+      <p>接着我把 200+ 条延迟 badcase 做了聚类，发现两个特征：<b>集中在特定直播间</b>（不是全局），<b>卡在约 20.5 秒</b>（不是随机波动）。20.5 这个数字太整了，一定是某个等待在起作用。</p>
+      <div class="pull">20.5 秒不是性能，是配置。<br>——是 ASR 侧“最大断句时长”在等。</div>
+      <p>顺着这个线索排查断句机制，向服务方确认了参数名 <code class="mono">voice_max_seconds</code>：它规定一句话最多等多久才判定为“说完”。当时的值接近 20 秒，叠加在天然滞后的 20 秒上，就变成了 25 秒。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">03<span>Decisions</span></div>
+    <div class="content rv">
+      <h2>三个取舍</h2>
+      <div class="opts">
+        <div><b><i>01</i>先量再改</b>
+          <p>不接受“感觉模型慢”这种判断。四段各自计时，把“30 秒里哪 5 秒是我们的”先算清楚，再谈优化。</p></div>
+        <div><b><i>02</i>小范围灰度</b>
+          <p>8/10/12 秒三个候选，先在 5 个直播间、1 小时音频上跑，再扩到 27 个直播间、6 小时音频回放。不直接全量改。</p></div>
+        <div><b><i>03</i>把代价写进结论</b>
+          <p>缩短短句时长会让断句变碎、调用变多，测试材料里 10 秒参数成本约 +14%。这个数字必须和“省了 25 秒”一起汇报，不能只说好消息。</p></div>
+      </div>
+      <h3>为什么不做“先切短再说”</h3>
+      <p>断句变碎的直接后果是识别文本被切断，下游违规判定会拿到半句话——误报率会上去。所以这次调参不是单纯提速，而是在<b>时延、准确性、成本</b>三者之间找点。最后选择的是 10 秒档：既压进 15 秒指标，成本增幅也可接受。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">04<span>Evidence</span></div>
+    <div class="content rv">
+      <h2>证据：参数对照与验证方式</h2>
+      <table class="t">
+        <thead><tr><th>候选值</th><th>端到端时延</th><th>断句质量</th><th>成本</th><th>结论</th></tr></thead>
+        <tbody>
+          <tr><td><b>20s（现状）</b></td><td>≈25s</td><td>完整</td><td>基准</td><td>超时</td></tr>
+          <tr><td>12s</td><td>≈17s</td><td>基本完整</td><td>+8%</td><td>仍超时</td></tr>
+          <tr><td><b>10s</b></td><td>≈15s</td><td>可接受</td><td><b>+14%</b></td><td><b>选定</b></td></tr>
+          <tr><td>8s</td><td>≈13s</td><td>明显变碎</td><td>+22%</td><td>误报上升，否掉</td></tr>
+        </tbody>
+      </table>
+      <p class="cap" style="margin-top:-8px">注：时延为端到端实测中位数；成本以 ASR 调用量为口径；断句质量按人工抽查“是否切在半句”评估。</p>
+      <h3>另外两件事：误报与提示词</h3>
+      <p><b>ASR 质量：</b>敏感词与专有名词识别不准，会让下游凭空触发告警。做法是维护高频词与替换词，识别前做引导、识别后做纠错，并把每次变更记录在案。</p>
+      <p><b>提示词迭代：</b>围绕 7 类违规及豁免边界补规则与正反例。判断某个误报是“偶然”还是“必然”，做法是同一输入并发 100 次看是否复现——能复现才值得改提示词，不能复现就先记着。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">05<span>Results</span></div>
+    <div class="content rv">
+      <h2>结果</h2>
+      <div class="kpi">
+        <div><b>−25s</b><span>端到端超时消除</span></div>
+        <div><b>27</b><span>覆盖直播间</span></div>
+        <div><b>+14%</b><span>换来的成本</span></div>
+        <div><b>7 类</b><span>违规规则 + 豁免边界</span></div>
+      </div>
+      <p>这次调参的价值不只是“快了”。它把一个模糊的“系统有点慢”，变成了一个可复述、可复用的判断路径：<b>先拆链路、再聚类、后查配置</b>。后面遇到别的“慢”，我先问的都是同一句话——这 25 秒里，哪 5 秒是我们的。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">06<span>Reflection</span></div>
+    <div class="content rv">
+      <h2>复盘</h2>
+      <p><b>最快的一步其实是“怀疑自己”。</b>如果一开始就顺着“模型慢”的假设去优化提示词或换模型，可能花两周也没有任何改善——因为那 2 秒根本不是瓶颈。</p>
+      <p><b>做得不够的是验证的自动化。</b>这次灰度靠的是录音回放 + 人工抽查，成本高、覆盖有限。如果重来，我会先搭一个固定的回放集（同一批音频、同样的判定），让每次调参都能一键对比，而不是每次重新组织测试。</p>
+      <div class="qa">
+        <details open><summary>“你怎么确定 20.5 秒不是巧合？”</summary>
+          <p>三个证据：一是聚类后分布集中在 20.5 附近而不是长尾；二是只在特定直播间出现（说明与配置/房间相关，不是全局性能）；三是查到的参数默认值恰好接近这个数。三者对上，才敢下结论。</p>
+        </details>
+        <details><summary>“为什么不是让 ASR 供应商改？”</summary>
+          <p>参数本来就是我们这边可调的，只是没人知道它影响端到端。先确认“我们能改”，再谈“要不要改”——这一步省掉了两周的跨团队沟通。</p>
+        </details>
+        <details><summary>“成本 +14% 谁拍的板？”</summary>
+          <p>我把三个候选的时延、断句质量、成本做成对照表，连同“不达标的业务后果”一起给到负责人，由他拍板。产品经理的活是把取舍摆清楚，不是替他选。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="nextproj">
+  <a href="moodbean.html"><div><small>Next Case</small><br><b>MoodBean 情绪管理 App · 0 → 1</b></div><span>→</span></a>
+</div>
+
+<footer class="foot">
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br><a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a></div>
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="../assets/resume.pdf" download>简历 PDF</a><br><a href="../work.html">全部作品</a></div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">© <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州</div>
+</footer>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

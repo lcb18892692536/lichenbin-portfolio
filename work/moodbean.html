@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MoodBean 情绪管理 App · 0 → 1 | 李陈斌</title>
+<meta name="description" content="从用户研究到情绪链路设计：一套 IP 两套人格、标签即协议、能确定的事不交给模型。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="../index.html">LC</a>
+  <div class="menu">
+    <a href="../index.html">Home | 主页</a>
+    <a href="../work.html" class="on">Portfolio | 作品集</a>
+    <a href="../about.html">About Us | 关于我</a>
+  </div>
+  <div class="right"><a href="../assets/resume.pdf" download>简历 PDF</a></div>
+</nav>
+
+<header class="p-hero">
+  <div class="crumbs"><a href="../index.html">Home</a><span>/</span><a href="../work.html">Portfolio</a><span>/</span>MoodBean</div>
+  <div class="eyebrow">Case 03 | 0 → 1 产品孵化 · 2025.08 — 2025.12</div>
+  <h1>同一个角色，<br>在两种场景里得是两个人。</h1>
+  <p class="claim">写完日记，AI 不该追问；开口聊天，AI 必须接话。这决定了提示词得有两套。</p>
+
+  <dl class="p-meta">
+    <div><dt>我的角色</dt><dd>产品（立项到上线）</dd></div>
+    <div><dt>团队</dt><dd>产品 + 设计 + 研发</dd></div>
+    <div><dt>调研</dt><dd>4 平台 · 6 个月讨论</dd></div>
+    <div><dt>验证</dt><dd>150+ 种子用户 A/B</dd></div>
+  </dl>
+  <p style="margin:0 0 10px"><a class="cta" href="../demo/moodbean-flow.html" target="_blank"><i>↗</i>看情绪链路的交互演示</a></p>
+</header>
+
+<main>
+  <div class="wrap" style="padding-bottom:16px">
+    <figure class="rv">
+      <img src="../assets/img/mb-posters.webp" alt="MoodBean 打卡海报：同一句金句、同一版式、六种 AI 画风">
+      <figcaption><b>图 1</b> · 同一句金句、同一个版式，六种完全不同的 AI 生成画风——以前一个冥想场景要买图，现在是一条提示词</figcaption>
+    </figure>
+  </div>
+
+  <section class="chapter">
+    <div class="num">01<span>Context</span></div>
+    <div class="content rv">
+      <h2>背景：立项时只有一个方向</h2>
+      <p>团队只知道要做“AI 情绪管理 App”，往下全是空白：服务谁、痛点是什么、做哪些功能、和已有的冥想 / AI 陪伴产品怎么区分。没有自己的用户，也没有测试用户。</p>
+      <p>所以第一件事不是画原型，而是去用户已经在的地方看他们说什么。我抓了 Reddit、Twitter、Discord、Facebook 四个平台近 6 个月的讨论——选四个是为了避免样本偏差，选 6 个月是为了看周期性，而不是抓一个时间点的热点。</p>
+      <div class="pull">从高频词里提炼出两句痛点：<br>情绪被牵着走 · 缺乏自我焦点。</div>
+      <p>这两句话不只是洞察，它们直接决定了产品结构：<b>“情绪被牵着走”对应即时干预</b>（情绪选择、冥想生成、语音快记），<b>“缺乏自我焦点”对应长期觉察</b>（月度复盘、AI 记忆）。所以它不是冥想音频库，是两条腿走路。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">02<span>Problem</span></div>
+    <div class="content rv">
+      <h2>问题：情绪产品的“假”在哪里</h2>
+      <p>同类产品的通病是“像客服”：你说难过，它说“我理解你的感受，建议你试试深呼吸”。这句话没有错，但它没有接住任何东西——用户立刻知道对面是个模板。</p>
+      <p>所以真正要解的不是“能不能生成一句安慰”，而是<b>这句话凭什么让人觉得被看见</b>。我的判断是三点：短、准、不结束。短到不像客服；准到点中具体那一件事；不结束，让情绪有地方待着。</p>
+      <p>这三条最后变成了硬约束写进提示词：<b>≤60 字、1–2 句、不提问、不总结、不归因、不给建议</b>。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">03<span>Decisions</span></div>
+    <div class="content rv">
+      <h2>四个设计判断</h2>
+      <div class="opts">
+        <div><b><i>01</i>能用规则就不用模型</b>
+          <p>用户选了表情就直接落库；只有没选（mood=0）才调模型判 5 级，判不出来回落“不喜不悲”。不让用户卡在“AI 没懂我”。</p></div>
+        <div><b><i>02</i>一个 IP，两套人格</b>
+          <p>日记回响 60 字、不许提问；主动聊天 60–120 字、五段结构、可以邀请一次。因为“一个人说”和“两个人在说”是两件事。</p></div>
+        <div><b><i>03</i>标签即协议</b>
+          <p>回复结尾的 <span class="mono">&lt;Talk&gt; &lt;Meditation&gt;</span> 不是文字，是给前端的指令：变成两个疗愈入口按钮。</p></div>
+      </div>
+      <h3>第四个：时长是算出来的，不是让模型数的</h3>
+      <p>用户选“10 分钟冥想”，模型写的内容可能只有 6 分钟。解法不是让它数数字，而是让它<b>在需要的地方打标签</b>：<span class="mono">&lt;break:3&gt;</span> 停 3 秒、<span class="mono">&lt;bowl:5&gt;</span> 五声颂钵（每声 27 秒）、<span class="mono">&lt;music:自然森林&gt;</span> 换 BGM，后端按标签把总时长加出来，再归到用户选的档位。</p>
+      <figure>
+        <img src="../assets/img/mb-flow3.webp" alt="标签协议演示：文本里的标签如何被解析成时间轴">
+        <figcaption><b>图 2</b> · 左侧是模型输出（带标签），右侧是后端解析出的时间轴：朗读 520s + 停顿 12s + 颂钵 54s + 缓冲 5s = 9:51 → 10 分钟档</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">04<span>Evidence</span></div>
+    <div class="content rv">
+      <h2>证据：两套人格、生成能力、内容深度</h2>
+      <h3>同一句用户输入，两种回响</h3>
+      <p>用户写：“今天提案被全盘否了，真的很崩溃。”（mood = 2 不开心）</p>
+      <table class="t">
+        <thead><tr><th>维度</th><th>写日记之后（mood）</th><th>主动聊天（talk）</th></tr></thead>
+        <tbody>
+          <tr><td>长度</td><td>≤60 字，1–2 句</td><td>60–120 字，1–3 段</td></tr>
+          <tr><td>实际输出</td><td>“那一下来得太突然了。明明刚看到一点起色。”</td><td>“哎…这句话一听，我心口都替你揪了一下。被这样否定真的很难受……”</td></tr>
+          <tr><td>提问</td><td><b>明确禁止</b></td><td>允许 1 个，必须轻柔开放</td></tr>
+          <tr><td>结尾</td><td>挂 <span class="mono">&lt;Meditation&gt; &lt;Talk&gt;</span></td><td>纯对话，无标签</td></tr>
+        </tbody>
+      </table>
+      <figure>
+        <img src="../assets/img/mb-flow2.webp" alt="两套人格对照页">
+        <figcaption><b>图 3</b> · 演示里的对照页：左边一张信纸，右边两种回响并排</figcaption>
+      </figure>
+
+      <h3>生成能力：一条提示词，79 张一致的动作图</h3>
+      <figure>
+        <img src="../assets/img/mb-beans.webp" alt="同一只豌豆的 8 种动作与场景">
+        <figcaption><b>图 4</b> · 同一只豌豆：挥手、跳跃、打网球、坐沙发、戴耳机、拿麦克风、踩滑板、荡秋千。真正的难点是“风格一致”，不是“生成一张”</figcaption>
+      </figure>
+
+      <h3>内容不是音频库，是技法库</h3>
+      <figure>
+        <img src="../assets/img/mb-tech.webp" alt="疗愈技法卡片：五指呼吸、盒式呼吸、PMR 等">
+        <figcaption><b>图 5</b> · 200 张技法卡，每张都是「目标 → 练习步骤 → 引导感受」，按缓解焦虑 / 帮助睡眠 / 提升专注等七类目标组织</figcaption>
+      </figure>
+
+      <h3>从线框到终稿</h3>
+      <figure>
+        <img src="../assets/img/mb-wire.webp" alt="早期 onboarding 线框">
+        <figcaption><b>图 6</b> · 早期 onboarding 线框：先用对话把人接住，再收集信息。当时的 IP 名还叫 Xindí</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/img/mb-ui.webp" alt="MoodBean 终稿界面：目标卡、情绪日历、月度数据、付费墙、首页等待">
+        <figcaption><b>图 7</b> · 终稿：七类冥想目标卡、情绪日历、月度数据（44 分 + 折线 + 情绪分布）、付费墙（年 $110 / 月 $20）、首页等待气泡</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">05<span>Results</span></div>
+    <div class="content rv">
+      <h2>结果与边界</h2>
+      <div class="kpi">
+        <div><b>7</b><span>MVP 功能<br>从 10+ 候选里砍出来</span></div>
+        <div><b>150+</b><span>种子用户 A/B<br>付费墙与定价</span></div>
+        <div><b>2</b><span>套提示词人格</span></div>
+        <div><b>200</b><span>张疗愈技法卡</span></div>
+      </div>
+      <p>需要说清楚的是：<b>幸福指数雷达图在 PRD 里有定义，但 MVP 阶段后端只留了占位接口</b>。我不把“设计过”说成“上线了”——这句话我在面试里也会照这样说。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">06<span>Reflection</span></div>
+    <div class="content rv">
+      <h2>复盘</h2>
+      <p><b>最大的教训是 MVP 定义得太宽。</b>7 个功能对一个小团队仍然偏多，导致每个功能的打磨都不够。如果重来，我会只做“即时干预”一条腿——它验证周期短、可感知；长期觉察放到 V2。</p>
+      <p><b>第二个教训是 AI 记忆这类功能的价值在长期</b>，而 MVP 阶段的用户留存周期太短，根本看不出效果。这类功能要么不做，要么先做“轻量版”：让用户看得见它记住了什么。</p>
+      <div class="qa">
+        <details open><summary>“为什么日记里不许 AI 提问？”</summary>
+          <p>日记是“一个人在说”。追问会把倾诉变成访谈，用户会开始组织语言、开始表演，情绪就跑了。聊天场景反过来——不接话就断了，所以必须邀请。</p>
+        </details>
+        <details><summary>“150+ 用户的 A/B 是怎么做的？”</summary>
+          <p>把同一场景下两个模型生成的内容给用户盲选并打分，同时记录调用成本。结论是“质量达标前提下选便宜的”，而不是选最聪明的——免费用户也会消耗调用。</p>
+        </details>
+        <details><summary>“情绪安全怎么处理？万一用户说想死？”</summary>
+          <p>提示词里明确禁止提供医疗、心理、药物建议；产品定位是轻度到中度情绪陪伴，不做治疗承诺。这一条在 PRD 里写成红线，也是我坚持不放宽的地方。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="nextproj">
+  <a href="youzan.html"><div><small>Next Case</small><br><b>私域 AI 客服知识库 · bebeBus</b></div><span>→</span></a>
+</div>
+
+<footer class="foot">
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br><a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a></div>
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="../assets/resume.pdf" download>简历 PDF</a><br><a href="../work.html">全部作品</a></div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">© <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州</div>
+</footer>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

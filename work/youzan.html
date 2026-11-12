@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>私域 AI 客服知识库 · bebeBus | 李陈斌</title>
+<meta name="description" content="AI 不直接对客，只出草稿；真正难的是让知识不过期——知识治理、测试集归因、长尾闭环。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="../index.html">LC</a>
+  <div class="menu">
+    <a href="../index.html">Home | 主页</a>
+    <a href="../work.html" class="on">Portfolio | 作品集</a>
+    <a href="../about.html">About Us | 关于我</a>
+  </div>
+  <div class="right"><a href="../assets/resume.pdf" download>简历 PDF</a></div>
+</nav>
+
+<header class="p-hero">
+  <div class="crumbs"><a href="../index.html">Home</a><span>/</span><a href="../work.html">Portfolio</a><span>/</span>有赞 · bebeBus</div>
+  <div class="eyebrow">Case 04 | 杭州有赞科技 · 2024.11 — 2025.06</div>
+  <h1>让 AI 会说话不难，<br>难的是让它说的话不过期。</h1>
+  <p class="claim">AI 不直接对客，只出草稿；真正的工作量在知识怎么进来、怎么切、怎么淘汰。</p>
+
+  <dl class="p-meta">
+    <div><dt>我的角色</dt><dd>产品经理助理</dd></div>
+    <div><dt>场景</dt><dd>母婴品牌私域（企微 + 小程序）</dd></div>
+    <div><dt>产出</dt><dd>130+ 条 FAQ · 150 条测试集</dd></div>
+    <div><dt>结果</dt><dd>有效数据率 65% → 91%</dd></div>
+  </dl>
+</header>
+
+<main>
+  <div class="wrap" style="padding-bottom:16px">
+    <figure class="rv">
+      <svg viewBox="0 0 1200 340" width="100%" style="border:1px solid var(--line);border-radius:6px;background:#131417" xmlns="http://www.w3.org/2000/svg">
+        <g font-family="monospace" font-size="13">
+          <text x="40" y="46" fill="#63676A">知识库流水线</text>
+          <g fill="#9A9E9B">
+            <rect x="40" y="72" width="180" height="56" fill="#1B1D20" stroke="#2A2C30"/><text x="56" y="105">五类资料</text>
+            <rect x="270" y="72" width="150" height="56" fill="#1B1D20" stroke="#2A2C30"/><text x="286" y="105">图片 OCR</text>
+            <rect x="470" y="72" width="170" height="56" fill="#1B1D20" stroke="#2A2C30"/><text x="486" y="105">统一 Markdown</text>
+            <rect x="690" y="72" width="180" height="56" fill="#1B1D20" stroke="#2A2C30"/><text x="706" y="105">按类型切分</text>
+            <rect x="920" y="72" width="200" height="56" fill="#1B1D20" stroke="#C9F06B" stroke-opacity=".45"/><text x="936" y="105" fill="#F2F1EC">130+ 条 FAQ</text>
+          </g>
+          <g stroke="#3A3D40"><line x1="220" y1="100" x2="270" y2="100"/><line x1="420" y1="100" x2="470" y2="100"/>
+            <line x1="640" y1="100" x2="690" y2="100"/><line x1="870" y1="100" x2="920" y2="100"/></g>
+
+          <text x="40" y="186" fill="#F2F1EC">标签：品类 · 产品线 · 月龄</text>
+          <text x="40" y="216" fill="#9A9E9B">补消费者问法 + 相似问法，让检索能命中“人怎么说话”</text>
+
+          <line x1="40" y1="246" x2="1120" y2="246" stroke="#232528"/>
+          <text x="40" y="278" fill="#9A9E9B">150 条测试集 → 每周 150+ 条对话标注 → 归因：知识缺失 / 检索问题 / 表达问题</text>
+          <text x="40" y="308" fill="#C9F06B">双周与品牌方校准 → 下架过期知识 → 有效数据率 65% → 91%</text>
+        </g>
+      </svg>
+      <figcaption><b>图 1</b> · 五类资料进 → 统一格式 → 按类型切分 → 带标签的 FAQ → 测试集归因 → 双周校准淘汰</figcaption>
+    </figure>
+  </div>
+
+  <section class="chapter">
+    <div class="num">01<span>Context</span></div>
+    <div class="content rv">
+      <h2>背景：24 小时在线，靠人扛不住</h2>
+      <p>母婴品牌的私域客服是全天候的：新手爸妈半夜喂奶、宝宝突发状况都会问。人工维持 24 小时在线成本很高，而且答案质量取决于在岗的那个人。</p>
+      <p>所以做的是一套 RAG 系统：<b>LLM 生成回复草稿 → 人工选择或修改后发送</b>。AI 不直接对客，是给人工客服提效的辅助工具。这个定位很关键——它决定了验收标准不是“AI 答得好不好”，而是“客服改得少不少”。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">02<span>Problem</span></div>
+    <div class="content rv">
+      <h2>问题：四个坑，模型只占一个</h2>
+      <ul>
+        <li><b>知识从哪来。</b>经销商文档、客服聊天记录、品类常识、产品素材、图片——五种来源，五种格式。</li>
+        <li><b>怎么切。</b>统一按字数滑窗切，会把一张产品说明切成半句。</li>
+        <li><b>怎么判断答得对不对。</b>没有测试集，就只能在线上“感觉不太行”。</li>
+        <li><b>怎么不过期。</b>下架产品、改价格、换活动，知识库不动就等于在教 AI 说错话。</li>
+      </ul>
+      <div class="pull">大部分“AI 答得不好”，其实是知识没进来，<br>不是模型不会说。</div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">03<span>Decisions</span></div>
+    <div class="content rv">
+      <h2>三个取舍</h2>
+      <div class="opts">
+        <div><b><i>01</i>按资料类型切分</b>
+          <p>产品大纲按章节、产品优势按分点、邮件按线索。切分策略不是技术参数，是对“这段文字本来怎么组织”的理解。</p></div>
+        <div><b><i>02</i>保留人工审核</b>
+          <p>不追求全自动。草稿 + 人工选择，既控制了风险，也让每次修改都变成标注数据。</p></div>
+        <div><b><i>03</i>双周校准淘汰</b>
+          <p>和品牌方固定双周对一次：哪些下架了、哪些改价了、哪些活动结束了。知识库要能“忘”。</p></div>
+      </div>
+      <h3>为什么不做“一键全自动回复”</h3>
+      <p>母婴场景里，一句错话的成本远高于一次转人工。所以宁可慢一点：AI 出草稿，人点发送。这个取舍在很长一段时间里被质疑“不够 AI”，但它换来了两个东西——可控的风险，和免费的标注数据。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">04<span>Evidence</span></div>
+    <div class="content rv">
+      <h2>证据：五类资料、切分策略、归因分类</h2>
+      <table class="t">
+        <thead><tr><th>资料来源</th><th>原来长什么样</th><th>怎么处理</th></tr></thead>
+        <tbody>
+          <tr><td>经销商文档</td><td>PDF / Word，章节清晰</td><td>按章节切，保留标题层级</td></tr>
+          <tr><td>客服聊天记录</td><td>口语、断句、错别字</td><td>清洗后按“问题—答案”对提取</td></tr>
+          <tr><td>品类常识</td><td>零散、跨文档</td><td>人工整理成分点，一条一个知识点</td></tr>
+          <tr><td>产品素材</td><td>图片为主（参数表、卖点图）</td><td>OCR 转文本，再人工核对关键参数</td></tr>
+          <tr><td>图片</td><td>详情页长图</td><td>切块 OCR，按商品 ID 归并</td></tr>
+        </tbody>
+      </table>
+      <h3>错题归因为什么要分三类</h3>
+      <p>测试集答错时，最省事的做法是“再调一调提示词”。但错因其实有三类：<b>知识缺失</b>（库里根本没有）、<b>检索问题</b>（有但没捞出来）、<b>表达问题</b>（捞出来了但说得不对）。三类的修法完全不同——补知识、调切分与召回、改提示词。不分清就会一直在改提示词，然后一直没用。</p>
+      <p class="cap">注：130+ 条 FAQ 与 150 条测试集均为项目期内产出；有效数据率 65% → 91% 来自项目材料记录，口径为“可被检索且答案正确”的知识条目占比。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">05<span>Results</span></div>
+    <div class="content rv">
+      <h2>结果</h2>
+      <div class="kpi">
+        <div><b>130+</b><span>条 FAQ<br>带品类/产品线/月龄标签</span></div>
+        <div><b>150</b><span>条测试集<br>按准确性与语气评估</span></div>
+        <div><b>91%</b><span>有效数据率<br>（原 65%）</span></div>
+        <div><b>双周</b><span>与品牌方校准节奏</span></div>
+      </div>
+      <p>“有效数据率”这个指标是我在这个项目里学到的：知识库的价值不是“有多少条”，而是“有多少条现在还是对的”。多出来的 26 个百分点，大部分来自淘汰过期内容和补齐消费者问法。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">06<span>Reflection</span></div>
+    <div class="content rv">
+      <h2>复盘</h2>
+      <p><b>如果重来，我会更早把“资料质量标准”写成文档。</b>什么算一条合格的知识块、图片 OCR 后必须核对到什么程度——当时靠口头共识，返工不少。</p>
+      <p><b>第二个遗憾是长尾治理没有做成产品。</b>长尾问题靠人工聚合、人工补，如果做成一个“高频未命中问题”的看板，运营自己就能补，不用每周开会。</p>
+      <div class="qa">
+        <details open><summary>“150 条测试集怎么来的？够用吗？”</summary>
+          <p>从真实对话里按品类和问题类型分层抽样，人工标注期望答案。150 条不够覆盖全部长尾，但足够发现“系统性错误”——它的用途是回归，不是评分。</p>
+        </details>
+        <details><summary>“为什么要做图片 OCR？直接让多模态模型看不就行？”</summary>
+          <p>当时的链路是纯文本检索，图片进不了索引。OCR 是为了让参数表、卖点图这类“只在图片里”的信息可被检索到；关键参数仍然人工核对，因为 OCR 认错一个数字就是事故。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="nextproj">
+  <a href="logtool.html"><div><small>Next</small><br><b>断句时长记录表 · 自己造的工具</b></div><span>→</span></a>
+</div>
+
+<footer class="foot">
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br><a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a></div>
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="../assets/resume.pdf" download>简历 PDF</a><br><a href="../work.html">全部作品</a></div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">© <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州</div>
+</footer>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

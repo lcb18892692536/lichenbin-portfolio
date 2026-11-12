@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>断句时长记录表 · 自己造的工具 | 李陈斌</title>
+<meta name="description" content="上万条 ASR 日志人工看不完，我把取数规则写成 7 条，做成一个能批量跑、能导出 Excel 的单页工具。">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="../index.html">LC</a>
+  <div class="menu">
+    <a href="../index.html">Home | 主页</a>
+    <a href="../work.html" class="on">Portfolio | 作品集</a>
+    <a href="../about.html">About Us | 关于我</a>
+  </div>
+  <div class="right"><a href="../assets/resume.pdf" download>简历 PDF</a></div>
+</nav>
+
+<header class="p-hero">
+  <div class="crumbs"><a href="../index.html">Home</a><span>/</span><a href="../work.html">Portfolio</a><span>/</span>断句时长记录表</div>
+  <div class="eyebrow">Tooling 01 | 内部工具 · 2026.09</div>
+  <h1>上万条日志，<br>我只关心一件事。</h1>
+  <p class="claim">这条话，从说完到出字幕，到底花了多久。</p>
+
+  <dl class="p-meta">
+    <div><dt>我的角色</dt><dd>产品经理（自己设计、自己写）</dd></div>
+    <div><dt>周期</dt><dd>1 天做完，之后一直在用</dd></div>
+    <div><dt>形态</dt><dd>单页 HTML · 零依赖 · 断网可用</dd></div>
+    <div><dt>状态</dt><dd>可试用 ↓</dd></div>
+  </dl>
+  <p style="margin:0 0 10px"><a class="cta" href="../demo/logtool.html" target="_blank"><i>↗</i>打开工具，粘一条日志试试</a></p>
+</header>
+
+<main>
+  <div class="wrap" style="padding-bottom:16px">
+    <figure class="rv">
+      <img src="../assets/img/logtool.webp" alt="断句时长记录表：规则区、导入区、预览区、结果表">
+      <figcaption><b>图 1</b> · 顶部是七条固定规则，中间导入日志，右边实时预览取数结果，下面落表（示例数据已脱敏）</figcaption>
+    </figure>
+  </div>
+
+  <section class="chapter">
+    <div class="num">01<span>Origin</span></div>
+    <div class="content rv">
+      <h2>从哪来：一次时延 badcase 分析</h2>
+      <p>做华为直播合规的时延排查时，第一件事是确认“到底慢在哪”。火山云导出的是一整段原始 JSON：一条日志里嵌着上千字的识别全文加几十个时间戳片段，只有 <code class="mono">definite: true</code> 的那一段才是“已经定稿的断句”。</p>
+      <p>要算时长，得在几十个片段里找到那一段，做 <code class="mono">end_time − start_time</code>。一条手工数几分钟，一次分析动辄上万条——这不是判断工作，是重复劳动。</p>
+      <div class="pull">更麻烦的不是慢，是口径。<br>三个人算同一个“断句时长”，能算出三个数。</div>
+      <p>有人算时间轴首尾跨度，有人把全部片段加起来，有人只算 definite 那段——三个值能差几百毫秒，结论就不同。所以我做的第一件事不是选工具，而是<b>把规则写死</b>。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">02<span>Rules</span></div>
+    <div class="content rv">
+      <h2>七条规则，先定死再动手</h2>
+      <table class="t">
+        <thead><tr><th>#</th><th>字段</th><th>规则</th></tr></thead>
+        <tbody>
+          <tr><td>①</td><td>uuid</td><td>取 <code class="mono">obsClientUuid:</code> 后紧跟的 36 位 UUID</td></tr>
+          <tr><td>②</td><td>log_id</td><td>取 <code class="mono">result.additions.log_id</code>；前 14 位是日志时间，<b>只作参考、不落表</b></td></tr>
+          <tr><td>③</td><td>text</td><td>取 <code class="mono">result.text</code> 全文（含未定稿尾段），原样落表</td></tr>
+          <tr><td>④</td><td>断句时长</td><td><b>只累加</b> <code class="mono">definite:true</code> 片段的 end−start，毫秒</td></tr>
+          <tr><td>⑤</td><td>是否 &gt;10s</td><td>严格大于 10000ms 记「是」</td></tr>
+          <tr><td>⑥</td><td>记录时间</td><td>处理这条日志的时刻，不是 log_id 里的时间</td></tr>
+          <tr><td>⑦</td><td>异常校验</td><td>definite 片段数 ≠ 1 → 标红，不进正常统计</td></tr>
+        </tbody>
+      </table>
+      <p>第 ⑦ 条是后面加的，也是最重要的一条。它把<b>“数据本身坏了”</b>和<b>“业务真的超时了”</b>分开——没有它，一批解析异常会被当成时延 badcase 混进统计，把结论整体带偏。</p>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">03<span>The Tool</span></div>
+    <div class="content rv">
+      <h2>工具长什么样</h2>
+      <p>单文件、零依赖、断网可用。粘日志或拖文件进去 → 实时预览取数结果 → 批量入表 → 复制成制表符文本直接贴进 Excel。下面这个就能用（示例是虚构话术，点「载入示例」换三种形态）：</p>
+    </div>
+  </section>
+
+  <div class="wrap" style="padding-bottom:40px">
+    <iframe src="../demo/logtool.html" title="断句时长记录表演示"
+      style="width:100%;height:720px;border:1px solid var(--line);border-radius:6px;background:#0f1216"></iframe>
+    <p class="cap" style="margin-top:10px">↑ 可以直接操作。小屏打不开就用<a href="../demo/logtool.html" target="_blank" style="color:var(--accent)">新窗口打开</a>。</p>
+  </div>
+
+  <section class="chapter">
+    <div class="num">04<span>Impact</span></div>
+    <div class="content rv">
+      <h2>它改变了什么</h2>
+      <ul>
+        <li><b>口径不可辩论。</b>规则写在页面顶部，同一条日志谁来跑都是同一个数——这才让后面的“是不是真的超时”能讨论。</li>
+        <li><b>批量替代人工。</b>万条级日志批量导入，秒级出表；异常行标红，可以只看异常。</li>
+        <li><b>产出直接可用。</b>复制全表就是制表符文本，粘进 Excel 列都对得上；也能导出 JSON 给脚本继续处理。</li>
+        <li><b>顺手修了一个隐性 bug。</b>原来的预览永远显示“否”——它读的是 <code class="mono">over10</code>，而解析结果里叫 <code class="mono">over10s</code>。</li>
+      </ul>
+      <div class="kpi">
+        <div><b>7</b><span>条固定规则</span></div>
+        <div><b>1</b><span>天做完</span></div>
+        <div><b>秒级</b><span>万条日志出表</span></div>
+        <div><b>0</b><span>依赖（断网可用）</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter">
+    <div class="num">05<span>Limits</span></div>
+    <div class="content rv">
+      <h2>它不做什么</h2>
+      <p>它<b>不判断</b>业务上是不是真的超时，也不判断这是不是 badcase——它只保证“这个数是对的、可复现的”。要不要立案、要不要改参数，仍然是人来定。</p>
+      <p>这个边界很重要。工具一旦开始替人下判断，就会把“数据对不对”和“结论对不对”混在一起，而这恰恰是我在项目里最想分开的两件事。</p>
+      <div class="qa">
+        <details open><summary>“为什么不提需求让开发做？”</summary>
+          <p>这类“一次性小工具”永远排不上期，但它卡着 badcase 分析的进度。规则固定、口径必须可复现——这种活适合自己动手，一天就能换回后面的时间。</p>
+        </details>
+        <details><summary>“你怎么保证规则没写错？”</summary>
+          <p>用已知答案的样例反推：取一条手算过的日志，跑出来必须是同一个数；再补两条边界（<code class="mono">definite</code> 为 0 个、多个），确认会被标红而不是被算进平均。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="nextproj">
+  <a href="zspace.html"><div><small>Back to</small><br><b>电商直播经营 Agent · Z·SPACE</b></div><span>→</span></a>
+</div>
+
+<footer class="foot">
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br><a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a></div>
+  <div class="col"><div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="../assets/resume.pdf" download>简历 PDF</a><br><a href="../work.html">全部作品</a></div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">© <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州</div>
+</footer>
+
+<script src="../assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 | 页面走丢了 · 李陈斌</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .e404{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
+  .e404 .code{font-family:var(--mono);font-size:13px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
+  .e404 h1{font-size:clamp(36px,5.2vw,68px);line-height:1.14;font-weight:700;margin:20px 0 22px;letter-spacing:-.02em}
+  .e404 h1 em{font-style:normal;color:var(--accent)}
+  .e404 p{color:var(--dim);max-width:520px;margin:0 0 40px}
+  .e404 .links{display:flex;gap:28px;flex-wrap:wrap;font-size:15px}
+  .e404 .links a{border-bottom:1px solid var(--line);padding-bottom:2px;text-decoration:none;transition:color .2s,border-color .2s}
+  .e404 .links a:hover{border-color:var(--accent);color:var(--accent)}
+  @media(max-width:720px){.e404{padding:0 24px}}
+</style>
+</head>
+<body>
+<div class="e404">
+  <div class="code">Error 404</div>
+  <h1>这个页面<em>还没做出来</em>，<br>或者已经挪走了。</h1>
+  <p>链接可能写错，也可能是内容还在整理中。下面三条路都能回到有东西的地方。</p>
+  <div class="links">
+    <a href="index.html">回首页</a>
+    <a href="work.html">看全部作品</a>
+    <a href="about.html">关于我</a>
+  </div>
+</div>
+</body>
+</html>

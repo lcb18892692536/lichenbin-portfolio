@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About | 关于我 · 李陈斌</title>
+<meta name="description" content="AI 产品经理，做应用层 AI 产品：把模型能力做成能上线、能验收的工具。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="李陈斌 · AI 产品经理">
+<meta property="og:title" content="About | 关于我 · 李陈斌">
+<meta property="og:description" content="AI 产品经理，做应用层 AI 产品：把模型能力做成能上线、能验收的工具。">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .quad{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:36px 0}
+  .quad div{background:var(--bg-2);padding:26px 24px;min-height:150px;position:relative}
+  .quad b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);margin-bottom:14px;font-weight:500}
+  .quad span{display:inline-block;font-size:14px;color:var(--fg);margin:0 12px 8px 0;
+    border-bottom:1px solid var(--line);padding-bottom:3px}
+  .quad span.hi{color:var(--accent);border-bottom-color:var(--accent)}
+  .skills{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:32px 0}
+  .skills div{background:var(--bg-2);padding:24px 22px}
+  .skills h4{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);
+    margin:0 0 12px;font-weight:500}
+  .skills p{margin:0;font-size:14px;line-height:2;color:var(--dim)}
+  @media (max-width:1023px){.skills{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="logo" href="index.html">LC</a>
+  <div class="menu">
+    <a href="index.html">Home | 主页</a>
+    <a href="work.html">Portfolio | 作品集</a>
+    <a href="about.html" class="on">About Us | 关于我</a>
+  </div>
+  <div class="right">
+    <a href="assets/resume.pdf" download>简历 PDF</a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="crumbs"><a href="index.html">Home</a><span>/</span>About</div>
+  <div class="eyebrow">About | 关于我</div>
+  <h1 class="h1 h1-one h1-tight">我做的是「把模型能力封装成能验收的工具」。</h1>
+  <p class="lead">我擅长把 AI 产品中的复杂问题<b>拆解成可验证、可持续迭代的流程</b>。其中，在 RAG 客服和直播合规项目中，我参与知识治理、Bad Case 定位、Prompt 优化和回归验证；在电商直播 Agent 项目中，我进一步设计了业务语义层、指标口径治理、独立复核与问题闭环机制，帮助 Agent 的结论做到有依据、可追溯，出现问题时也能定位原因并推动改进。我希望把这些经验用于提升 AI 产品的可靠性与业务价值。</p>
+</header>
+
+<main class="wrap">
+
+  <!-- 四象限 -->
+  <section style="padding-bottom:24px">
+    <div class="eyebrow dim">Map | 我做过什么类型的 AI 产品</div>
+    <p class="body">用「自主性 × 交互性」两条轴给我的四个项目定位：越往右上，模型自己做的决定越多，需要框住的东西也越多。</p>
+    <div class="quad">
+      <div>
+        <b>高自主 · 低交互</b>
+        <span class="hi">华为 · 直播违规检测</span><br>
+        <small class="cap">模型自动判定 + 分级处置，不与人多轮对话</small>
+      </div>
+      <div>
+        <b>高自主 · 高交互</b>
+        <span class="hi">MoodBean · 情绪陪伴</span><br>
+        <small class="cap">AI 主动回响 + 长期记忆，用户随时开口</small>
+      </div>
+      <div>
+        <b>低自主 · 低交互</b>
+        <span class="hi">Z·SPACE · 经营 Agent</span><br>
+        <small class="cap">查数、复盘、给建议，但结论必须带出处</small>
+      </div>
+      <div>
+        <b>低自主 · 高交互</b>
+        <span class="hi">有赞 · 私域 AI 客服</span><br>
+        <small class="cap">只出草稿，人工选用后再发；AI 不直接对客</small>
+      </div>
+    </div>
+    <p class="cap" style="margin-top:-10px">注：Z·SPACE 也可以看作高自主，因为 Agent 会自己决定查什么；我按“最终决策由人拍板”归到低自主。</p>
+  </section>
+
+  <!-- 能力 -->
+  <section style="padding:72px 0 96px">
+    <div class="eyebrow dim">Capability | 能力清单</div>
+    <div class="skills">
+      <div>
+        <h4>AI 产品与评估</h4>
+        <p>需求拆解 · AI 场景设计<br>RAG 知识治理 · 测试集与标注<br>Bad Case 归因 · Prompt 迭代<br>灰度验证 · 效果与成本权衡</p>
+      </div>
+      <div>
+        <h4>产品方法</h4>
+        <p>用户研究 · 竞品分析<br>PRD 与原型 · 指标口径设计<br>漏斗分析 · A/B 测试<br>独立复核 · 知识沉淀</p>
+      </div>
+      <div>
+        <h4>工具实践</h4>
+        <p>Vibe Coding（自己写工具与演示）<br>ComfyUI · ControlNet<br>Tripo3D API · 飞书多维表<br>SQL 与数据校验（够用）</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="col">
+    <div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">CONTACT</div>
+    联系方式在投递时提供<br>
+    <a href="mailto:hi@lichenbin.top">hi@lichenbin.top</a> <span style="color:var(--mute)">（域名待确认）</span>
+  </div>
+  <div class="col">
+    <div class="mono" style="color:var(--mute);font-size:12px;letter-spacing:.16em">ELSEWHERE</div>
+    <a href="assets/resume.pdf" download>简历 PDF</a><br>
+    <a href="work.html">作品集</a>
+  </div>
+  <div class="sp"></div>
+  <div class="col" style="text-align:right">
+    © <span data-year>2026</span> 李陈斌<br>AI 产品经理 · 杭州
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

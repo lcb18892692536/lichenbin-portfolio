@@ -1,0 +1,6 @@
+# 部署时排除（Cloudflare Workers/Pages 的静态资源忽略清单，语法同 .gitignore）
+# 备份文件不上传，避免旧版本内容被公网直接访问
+*.backup-*.html
+*.backup-*.css
+*.backup-*.js
+_headers
