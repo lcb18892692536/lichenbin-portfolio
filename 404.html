@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>404 | 页面走丢了 · 李陈斌</title>
 <meta name="robots" content="noindex">
+<!-- 部署在 /lichenbin-portfolio/ 子路径下时，404 页在任意深度都能正确找到样式与链接；
+     换到自定义域名根目录时这段不生效，走默认相对路径 -->
+<script>if(location.pathname.indexOf('/lichenbin-portfolio/')===0)document.write('<base href="/lichenbin-portfolio/">');</script>
 <link rel="stylesheet" href="assets/style.css">
 <style>
   .e404{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
